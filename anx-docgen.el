@@ -80,7 +80,7 @@
 
 (defun an-print-object-standard-fields (object)
 	 ;; Alist -> IO
-  (format "| %s | %s | %s | %s |\n"
+  (format "| %s | %s | %s | %s | | | |\n"
 	  (assoc-val 'name object)
 	  (assoc-val 'type object)
 	  (assoc-val 'sort_by object)
@@ -110,10 +110,13 @@
   (an-print-to-scratch-buffer
    (format "\nh4. JSON Fields\n"))
   (an-print-to-scratch-buffer
-   (format "| Name | Type | Sort By? | Filter By? |\n"))
+   (format *an-table-header*))
   (mapc (lambda (object)
 	  (an-process-object object))
 	array-of-alists))
+
+(defvar *an-table-header*
+  "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||\n")
 
 (defun an-print-to-scratch-buffer (format-string)
   (princ format-string
@@ -126,7 +129,7 @@
     (an-print-to-scratch-buffer
      (format "\nh4. %s\n" name))
     (an-print-to-scratch-buffer
-     (format "| Name | Type | Sort By? Filter By? |\n" name))
+     (format *an-table-header*))
     (mapc (lambda (object)
 	    ;; Nothing should have fields at this level (I hope).
 	    (an-process-object object))
