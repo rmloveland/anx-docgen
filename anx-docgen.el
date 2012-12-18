@@ -3,13 +3,6 @@
 (defvar *an-stack* nil
   "The stack where we stash our second-pass field definitions.")
 
-(defun an-get-response-object (title response-json)
-  ;; Symbol Alist -> Alist
-  (let ((result (assoc title (assoc 'response response-json))))
-    (cond ((equal title 'invoices)
-	   (elt (cdr result) 0))
-	  (t result))))
-
 (defun alistp (object)
   ;; Object -> Boolean
   (and (listp object)
@@ -51,27 +44,6 @@
 
 (defun an-stack-emptyp ()
   (null *an-stack*))
-
-(defun an-build-json-stack (response-object)
-  ;; Alist -> State!
-  ;; (an-get-response-object 'invoices msft-invoice)
-  (cond ((null response-object) nil)
-	((array-of-objectsp response-object)
-	 (let ((obj (get-random-object response-object)))
-	   (push obj *an-json-stack*)
-	   (an-build-json-stack obj)))
-	((objectp response-object)
-	 (let ((keys (get-object-keys response-object)))
-	   (progn
-	     (push keys *an-json-stack*)
-	     (mapc (lambda (x)
-		     (let ((val (assoc x response-object)))
-		       (if (array-of-objectsp val)
-			   (push (get-random-object val) *an-json-stack*)
-			 (push val *an-json-stack*))
-		       (an-build-json-stack val)))
-		     keys))))
-	(t nil)))
 
 (defun an-clear-stack ()
   ;; State!
