@@ -6,30 +6,35 @@
 
   ANX-Docgen is an Emacs Lisp package that is designed to
   automatically create formatted documentation tables from the JSON
-  returned by various AppNexus API services.
+  returned by various AppNexus API services' `/meta' calls.
+
+* Data Format
+
+  You are given an array of JSON objects, which is converted into an
+  array of Lisp association lists .
+
+  For each association list (or /alist/), the following information is
+  available:
+
+  | Field    | Type             | Sort by? | Filter by? |
+  |----------+------------------+----------+------------|
+  | snapshot | array of objects | false    | false      |
+  |          |                  |          |            |
+
+  If the alist's /type/ value is ``array of objects'', the =fields=
+  key will also be available, which is itself an array of objects.
 
 * Implementation
 
-  Get a `response-object', a tree (an object). If the tree is an object:
-
-  1. Get at the first level using `get-object-keys'. Push this list of
-     objects onto *an-json-stack*. This is the first documentation
-     table.
-
-  2. For each item in the list you just got back, use `object-get-val'
-     to get a k:v mapping from the object and push it onto
-     *an-json-stack*.
-
-  3. Recur on each of the `object-get-val' responses.
-     
-  If the tree is an array of objects:
-
-  1. Recur onto a random object using `get-random-object'.
-
-  2. You now have an object. Do what it says above.
+  As a first cut, we will implement a ``two-pass'' solution. We
+  iterate over the array of objects, printing the /name/, /type/,
+  /sort_by/ and /filter_by/ values into a tabular format.
   
-  Print the elements of `first-names' into a table. Then, for each
-  element of that initial list `A', get its subtree `B_i' (which is
-  the `next-response-body') by calling. If the `next-response-body' is
-  an array, then it's an array of objects, and we should print out
-  each of them in turn. Recur through the tree breadth-first.
+  If the /type/ is ``array of objects'', there should be a /fields/
+  key. If this key exists, we will cons the name of the current
+  object onto the array of objects in /fields/, and then push /fields/
+  onto a stack.
+
+  After the first pass, when we've printed out the initial table, we
+  will then pop items off of the stack one by one, printing them out
+  in a tabular format as well.

@@ -1,7 +1,7 @@
 ;;; ANX-Docgen
 
-(defvar *an-json-stack* nil
-  "The global stack.")
+(defvar *an-stack* nil
+  "The stack where we stash our second-pass field definitions.")
 
 (defun an-get-response-object (title response-json)
   ;; Symbol Alist -> Alist
@@ -43,11 +43,14 @@
 
 (defun stack-push (item)
   ;; Item -> State!
-  (push item *an-json-stack*))
+  (push item *an-stack*))
 
 (defun stack-pop ()
   ;; State!
-  (pop *an-json-stack*))
+  (pop *an-stack*))
+
+(defun an-stack-emptyp ()
+  (null *an-stack*))
 
 (defun an-build-json-stack (response-object)
   ;; Alist -> State!
@@ -72,7 +75,66 @@
 
 (defun an-clear-stack ()
   ;; State!
-  (progn (setq *an-json-stack* nil)
+  (progn (setq *an-stack* nil)
 	 (setq *an-count* 0)))
+
+(defun an-print-object-standard-fields (object)
+	 ;; Alist -> IO
+  (format "| %s | %s | %s | %s |\n"
+	  (assoc-val 'name object)
+	  (assoc-val 'type object)
+	  (assoc-val 'sort_by object)
+	  (assoc-val 'filter_by object)))
+
+(defun an-object-has-fieldsp (object)
+	 ;; Alist -> Boolean
+	 (if (assoc 'fields object)
+	     t
+	   nil))
+
+(defun an-save-fields-for-later (object)
+  ;; Alist -> State!
+  (let ((name (assoc-val 'name object)))
+    (stack-push (cons name (assoc-val 'fields object)))))
+
+(defun an-process-object (object)
+  ;; Alist -> IO State!
+  (progn
+    (an-print-to-scratch-buffer
+     (an-print-object-standard-fields object))
+    (if (an-object-has-fieldsp object)
+	(an-save-fields-for-later object))))
+
+(defun an-process-objects (array-of-alists)
+  ;; Array -> IO State!
+  (an-print-to-scratch-buffer
+   (format "\nh4. JSON Fields\n"))
+  (an-print-to-scratch-buffer
+   (format "| Name | Type | Sort By? | Filter By? |\n"))
+  (mapc (lambda (object)
+	  (an-process-object object))
+	array-of-alists))
+
+(defun an-print-to-scratch-buffer (format-string)
+  (princ format-string
+	 (get-buffer "*scratch*")))
+
+(defun an-process-stack-item (list)
+  ;; List -> IO State!
+  (let ((array-of-alists (cdr list))
+	(name (capitalize (car list))))
+    (an-print-to-scratch-buffer
+     (format "\nh4. %s\n" name))
+    (an-print-to-scratch-buffer
+     (format "| Name | Type | Sort By? Filter By? |\n" name))
+    (mapc (lambda (object)
+	    ;; Nothing should have fields at this level (I hope).
+	    (an-process-object object))
+	  array-of-alists)))
+
+(defun an-process-stack-items ()
+  ;; -> IO State!
+  (while (not (an-stack-emptyp))
+    (an-process-stack-item (stack-pop))))
 
 ;; anx-docgen.el ends here.
