@@ -26,7 +26,14 @@
   (and (arrayp array)
        (alistp (elt array 0))))
 
-(defun get-random-object (array-of-alists)
+(defun assoc-val (key alist)
+  ;; Symbol Alist -> Object
+  (let ((result (assoc key alist)))
+    (if result
+	(cdr result)
+      result)))
+
+(defun get-random-alist (array-of-alists)
   ;; Array of Alists -> Alist
   (let* ((len (length array-of-alists))
 	 (rand (random len)))
