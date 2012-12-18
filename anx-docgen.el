@@ -3,42 +3,42 @@
 (defvar *an-stack* nil
   "The stack where we stash our second-pass field definitions.")
 
-(defun alistp (object)
+(defun an-alistp (object)
   ;; Object -> Boolean
   (and (listp object)
        (every #'consp object)))
 
-(defun get-alist-keys (alist)
+(defun an-get-alist-keys (alist)
   ;; Alist -> List
-  (if (alistp alist)
+  (if (an-alistp alist)
       (mapcar (lambda (elem)
 		(car elem))
 	      alist)
     nil))
 
-(defun array-of-alistsp (array)
+(defun an-array-of-alistsp (array)
   ;; Object -> Boolean
   (and (arrayp array)
-       (alistp (elt array 0))))
+       (an-alistp (elt array 0))))
 
-(defun assoc-val (key alist)
+(defun an-assoc-val (key alist)
   ;; Symbol Alist -> Object
   (let ((result (assoc key alist)))
     (if result
 	(cdr result)
       result)))
 
-(defun get-random-alist (array-of-alists)
+(defun an-get-random-alist (array-of-alists)
   ;; Array of Alists -> Alist
   (let* ((len (length array-of-alists))
 	 (rand (random len)))
     (elt array-of-alists rand)))
 
-(defun stack-push (item)
+(defun an-stack-push (item)
   ;; Item -> State!
   (push item *an-stack*))
 
-(defun stack-pop ()
+(defun an-stack-pop ()
   ;; State!
   (pop *an-stack*))
 
@@ -59,10 +59,10 @@
 (defun an-print-object-standard-fields (object)
 	 ;; Alist -> IO
   (format "| %s | %s | %s | %s | | | |\n"
-	  (assoc-val 'name object)
-	  (assoc-val 'type object)
-	  (an-translate-boolean (assoc-val 'sort_by object))
-	  (an-translate-boolean (assoc-val 'filter_by object))))
+	  (an-assoc-val 'name object)
+	  (an-assoc-val 'type object)
+	  (an-translate-boolean (an-assoc-val 'sort_by object))
+	  (an-translate-boolean (an-assoc-val 'filter_by object))))
 
 (defun an-object-has-fieldsp (object)
 	 ;; Alist -> Boolean
@@ -72,8 +72,8 @@
 
 (defun an-save-fields-for-later (object)
   ;; Alist -> State!
-  (let ((name (assoc-val 'name object)))
-    (stack-push (cons name (assoc-val 'fields object)))))
+  (let ((name (an-assoc-val 'name object)))
+    (an-stack-push (cons name (an-assoc-val 'fields object)))))
 
 (defun an-process-object (object)
   ;; Alist -> IO State!
@@ -116,11 +116,11 @@
 (defun an-process-stack-items ()
   ;; -> IO State!
   (while (not (an-stack-emptyp))
-    (an-process-stack-item (stack-pop))))
+    (an-process-stack-item (an-stack-pop))))
 
 (defun an-print-meta (array-of-alists)
   ;; Array -> IO State!
-  (if (array-of-alistsp array-of-alists)
+  (if (an-array-of-alistsp array-of-alists)
       (progn
 	(an-clear-stack)
 	(an-process-objects array-of-alists)
