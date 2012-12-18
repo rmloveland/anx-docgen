@@ -4,6 +4,12 @@
 
 * Overview
 
+  ANX-Docgen is an Emacs Lisp package that is designed to
+  automatically create formatted documentation tables from the JSON
+  returned by various AppNexus API services.
+
+* Implementation
+
   Get a `response-object', a tree (an object). If the tree is an object:
 
   1. Get at the first level using `get-object-keys'. Push this list of
@@ -15,8 +21,7 @@
      *an-json-stack*.
 
   3. Recur on each of the `object-get-val' responses.
-
-
+     
   If the tree is an array of objects:
 
   1. Recur onto a random object using `get-random-object'.
