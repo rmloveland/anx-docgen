@@ -1,38 +1,4 @@
-;; This buffer is for notes you don't want to save, and for Lisp evaluation.
-;; If you want to create a file, visit that file with C-x C-f,
-;; then enter the text in that file's own buffer.
-
-;; Get a `response-object', a tree (an object).
-
-;; (setq first-response-body (an-get-response-object 'invoices msft-invoice))
-
-;; If the tree is an object:
-
-;; 1. Get at the first level using `get-object-keys'. Push this list of objects onto *an-json-stack*. This is the first documentation table.
-
-;; 2. For each item in the list you just got back, use `object-get-val' to get a k:v mapping from the object and push it onto *an-json-stack*.
-
-;; 3. Recur on each of the `object-get-val' responses.
-
-;; If the tree is an array of objects:
-
-;; 1. Recur onto a random object using `get-random-object'.
-
-;; 2. You now have an object. Do what it says above.
-
-;; (setq first-names (mapcar (lambda (x) (car x)) first-response-body))
-
-;; Print the elements of `first-names' into a table.
-
-;; (mapc (lambda (x) (format "%s" x)) first-names)
-
-;; Then, for each element of that initial list `A', get its subtree `B_i' (which is the `next-response-body') by calling 
-
-;; (setq next-response-body (cdr (assoc 'line_items first-response-body)))
-
-;; If the `next-response-body' is an array, then it's an array of objects, and we should print out each of them in turn.
-
-;;; Recur through the tree breadth-first.
+;;; ANX-Docgen
 
 (setq *an-json-stack* nil)
 
@@ -108,4 +74,4 @@
     (smart-print-buf bufname (reverse *an-json-stack*) mode)
     (an-clear-stack)))
 
-;; an-docgen.el ends here.
+;; anx-docgen.el ends here.

@@ -3,3 +3,28 @@
 #+email: rloveland@appnexus.com
 
 * Overview
+
+  Get a `response-object', a tree (an object). If the tree is an object:
+
+  1. Get at the first level using `get-object-keys'. Push this list of
+     objects onto *an-json-stack*. This is the first documentation
+     table.
+
+  2. For each item in the list you just got back, use `object-get-val'
+     to get a k:v mapping from the object and push it onto
+     *an-json-stack*.
+
+  3. Recur on each of the `object-get-val' responses.
+
+
+  If the tree is an array of objects:
+
+  1. Recur onto a random object using `get-random-object'.
+
+  2. You now have an object. Do what it says above.
+  
+  Print the elements of `first-names' into a table. Then, for each
+  element of that initial list `A', get its subtree `B_i' (which is
+  the `next-response-body') by calling. If the `next-response-body' is
+  an array, then it's an array of objects, and we should print out
+  each of them in turn. Recur through the tree breadth-first.
