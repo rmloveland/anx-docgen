@@ -1,6 +1,7 @@
 ;;; ANX-Docgen
 
-(setq *an-json-stack* nil)
+(defvar *an-json-stack* nil
+  "The global stack.")
 
 (defun an-get-response-object (title response-json)
   ;; Symbol Alist -> Alist
@@ -20,28 +21,16 @@
 	    (car elem))
 	  alist))
 
-(defun objectp (it)
+(defun array-of-alistsp (array)
   ;; Object -> Boolean
-  (alistp it))
+  (and (arrayp array)
+       (alistp (elt array 0))))
 
-(defun get-object-keys (it)
-  ;; Alist -> List
-  (get-alist-keys it))
-
-(defun array-of-objectsp (a)
-  ;; Object -> Boolean
-  (and (arrayp a)
-       (objectp (elt a 0))))
-
-(defun get-random-object (array-of-objects)
-  ;; Array of Objects -> Object
-  (let* ((len (length array-of-objects))
+(defun get-random-object (array-of-alists)
+  ;; Array of Alists -> Alist
+  (let* ((len (length array-of-alists))
 	 (rand (random len)))
-    (elt array-of-objects rand)))
-
-(defun object-get-val (key object)
-  ;; Key Object -> Value
-  (assoc key object))
+    (elt array-of-alists rand)))
 
 (defun stack-push (item)
   ;; Item -> State!
@@ -64,7 +53,7 @@
 	   (progn
 	     (push keys *an-json-stack*)
 	     (mapc (lambda (x)
-		     (let ((val (object-get-val x response-object)))
+		     (let ((val (assoc x response-object)))
 		       (if (array-of-objectsp val)
 			   (push (get-random-object val) *an-json-stack*)
 			 (push val *an-json-stack*))
