@@ -140,4 +140,10 @@
   (while (not (an-stack-emptyp))
     (an-process-stack-item (stack-pop))))
 
+(defun an-print-meta (array-of-alists)
+  ;; Array -> IO State!
+  (an-clear-stack)
+  (an-process-objects array-of-alists)
+  (an-process-stack-items))
+
 ;; anx-docgen.el ends here.
