@@ -17,9 +17,11 @@
 
 (defun get-alist-keys (alist)
   ;; Alist -> List
-  (mapcar (lambda (elem)
-	    (car elem))
-	  alist))
+  (if (alistp alist)
+      (mapcar (lambda (elem)
+		(car elem))
+	      alist)
+    nil))
 
 (defun array-of-alistsp (array)
   ;; Object -> Boolean
