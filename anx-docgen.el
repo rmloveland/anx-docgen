@@ -78,13 +78,19 @@
   (progn (setq *an-stack* nil)
 	 (setq *an-count* 0)))
 
+(defun an-translate-boolean (symbol)
+  ;; Symbol -> String
+  (if (equal symbol :json-false)
+      "No"
+    "Yes"))
+
 (defun an-print-object-standard-fields (object)
 	 ;; Alist -> IO
   (format "| %s | %s | %s | %s | | | |\n"
 	  (assoc-val 'name object)
 	  (assoc-val 'type object)
-	  (assoc-val 'sort_by object)
-	  (assoc-val 'filter_by object)))
+	  (an-translate-boolean (assoc-val 'sort_by object))
+	  (an-translate-boolean (assoc-val 'filter_by object))))
 
 (defun an-object-has-fieldsp (object)
 	 ;; Alist -> Boolean
@@ -142,8 +148,17 @@
 
 (defun an-print-meta (array-of-alists)
   ;; Array -> IO State!
-  (an-clear-stack)
-  (an-process-objects array-of-alists)
-  (an-process-stack-items))
+  (if (array-of-alistsp array-of-alists)
+      (progn
+	(an-clear-stack)
+	(an-process-objects array-of-alists)
+	(an-process-stack-items))
+    (error "`an-print-meta' expects an array of association lists.")))
+
+(defun an-really-print-meta ()
+  ;; -> IO State!
+  (interactive)
+  (let ((array-of-alists (read (buffer-string))))
+    (an-print-meta array-of-alists)))
 
 ;; anx-docgen.el ends here.
