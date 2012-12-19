@@ -86,7 +86,7 @@
 (defun an-process-objects (array-of-alists)
   ;; Array -> IO State!
   (an-print-to-scratch-buffer
-   (format "\nh4. JSON Fields\n"))
+   (format "\nh4. JSON Fields\n\n"))
   (an-print-to-scratch-buffer
    (format *an-table-header*))
   (mapc (lambda (object)
@@ -105,7 +105,7 @@
   (let ((array-of-alists (cdr list))
 	(name (capitalize (car list))))
     (an-print-to-scratch-buffer
-     (format "\nh4. %s\n" name))
+     (format "\nh4. %s\n\n" name))
     (an-print-to-scratch-buffer
      (format *an-table-header*))
     (mapc (lambda (object)
