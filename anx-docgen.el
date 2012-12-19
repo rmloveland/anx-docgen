@@ -47,8 +47,7 @@
 
 (defun an-clear-stack ()
   ;; State!
-  (progn (setq *an-stack* nil)
-	 (setq *an-count* 0)))
+  (progn (setq *an-stack* nil)))
 
 (defun an-translate-boolean (symbol)
   ;; Symbol -> String
