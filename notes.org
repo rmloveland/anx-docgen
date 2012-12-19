@@ -8,33 +8,62 @@
   automatically create formatted documentation tables from the JSON
   returned by various AppNexus API services' `/meta' calls.
 
-* Data Format
-
-  You are given an array of JSON objects, which is converted into an
-  array of Lisp association lists .
-
-  For each association list (or /alist/), the following information is
-  available:
-
-  | Field    | Type             | Sort by? | Filter by? |
-  |----------+------------------+----------+------------|
-  | snapshot | array of objects | false    | false      |
-  |          |                  |          |            |
-
-  If the alist's /type/ value is ``array of objects'', the =fields=
-  key will also be available, which is itself an array of objects.
-
-* Implementation
-
-  As a first cut, we will implement a ``two-pass'' solution. We
-  iterate over the array of objects, printing the /name/, /type/,
-  /sort_by/ and /filter_by/ values into a tabular format.
+* API Services
   
-  If the /type/ is ``array of objects'', there should be a /fields/
-  key. If this key exists, we will cons the name of the current
-  object onto the array of objects in /fields/, and then push /fields/
-  onto a stack.
+** Data Format
 
-  After the first pass, when we've printed out the initial table, we
-  will then pop items off of the stack one by one, printing them out
-  in a tabular format as well.
+   You are given an array of JSON objects, which is converted into an
+   array of Lisp association lists .
+
+   For each association list (or /alist/), the following information is
+   available:
+
+   | Field    | Type             | Sort by? | Filter by? |
+   |----------+------------------+----------+------------|
+   | snapshot | array of objects | false    | false      |
+   |          |                  |          |            |
+
+   If the alist's /type/ value is ``array of objects'', the =fields=
+   key will also be available, which is itself an array of objects.
+
+** Implementation
+
+   As a first cut, we will implement a ``two-pass'' solution. We
+   iterate over the array of objects, printing the /name/, /type/,
+   /sort_by/ and /filter_by/ values into a tabular format.
+   
+   If the /type/ is ``array of objects'', there should be a /fields/
+   key. If this key exists, we will cons the name of the current
+   object onto the array of objects in /fields/, and then push /fields/
+   onto a stack.
+
+   After the first pass, when we've printed out the initial table, we
+   will then pop items off of the stack one by one, printing them out
+   in a tabular format as well.
+
+* Reports
+
+  It seems that there are three (3) main types of listings returned by
+  the Report Service's `/meta' calls -- these examples are drawn from
+  the Network Analytics report:
+
+  - /columns/: 247 lines
+  - /filters/: 91 lines
+  - /havings/: 41 lines
+    
+  Next step: investigate what the intersections of these sets actually
+  mean, and how the API's representation maps to the UI's ``metrics &
+  dimensions'' language.
+
+** Data Format
+
+   You are given an association list. For each /key/ in the alist, you
+   will have to print the /key/ (since it's the name of the table of
+   documentation) and then check the value of /key/ as follows:
+   
+   1. If /key/ yields an array of alists, then iterate over the array,
+      performing `an-process-object'.
+
+   2. If an array (but not an array of alists, for which you've
+      already checked), then just print the values in the array one
+      after another, separated by newlines.
