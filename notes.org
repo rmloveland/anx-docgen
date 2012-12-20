@@ -47,10 +47,10 @@
   the Report Service's `/meta' calls -- these examples are drawn from
   the Network Analytics report:
 
-  - /columns/: 247 lines
-  - /filters/: 91 lines
-  - /havings/: 41 lines
-    
+  - /columns/: 124 lines
+  - /filters/: 45 lines
+  - /havings/: 20 lines
+
   Next step: investigate what the intersections of these sets actually
   mean, and how the API's representation maps to the UI's ``metrics &
   dimensions'' language.
