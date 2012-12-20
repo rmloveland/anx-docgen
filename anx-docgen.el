@@ -132,4 +132,50 @@
   (let ((array-of-alists (read (buffer-string))))
     (an-print-meta array-of-alists)))
 
+;;; Reporting.
+
+(defvar *an-dimensions-table-header*
+  "|| Column || Type || Group? || Filter? || Description ||\n")
+
+(defvar *an-metrics-table-header*
+  "|| Column || Type || Formula || Description ||\n")
+
+(defun an-print-column-standard-fields (alist)
+	 ;; Alist -> IO
+  (format "| %s | %s |\n"
+	  (an-assoc-val 'column alist)
+	  (an-assoc-val 'type alist)))
+
+(defun an-print-metric-standard-fields (alist)
+  ;; Alist -> IO
+  (format "| %s |\n"
+	  (an-assoc-val 'column alist)))
+
+(defun an-process-column (alist)
+  ;; Alist -> IO State!
+  (an-print-to-scratch-buffer
+   (an-print-column-standard-fields alist)))
+
+(defun an-process-columns (array-of-alists)
+  ;; Array -> IO State!
+  (an-print-to-scratch-buffer
+   (format "\nh4. Dimensions\n\n")) ;; FIXME: Is this the right header?
+  (an-print-to-scratch-buffer
+   (format *an-dimensions-table-header*))
+  (mapc (lambda (alist)
+	  (an-process-column alist))
+	array-of-alists))
+
+(defun an-print-time-granularity (alist)
+  ;; Alist -> IO
+  (format "%s\n"
+	  (assoc-val 'time_granularity network-analytics-meta)))
+
+(defun an-print-time-frame (alist)
+  ;; Alist -> IO
+  (mapc (lambda (elem) 
+	  (an-print-to-scratch-buffer
+	     (format "%s\n" elem)))
+	(assoc-val 'time_intervals network-analytics-meta)))
+  
 ;; anx-docgen.el ends here.
