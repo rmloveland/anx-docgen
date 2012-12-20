@@ -141,7 +141,7 @@
   "|| Column || Type || Formula || Description ||\n")
 
 (defun an-print-column-standard-fields (alist)
-	 ;; Alist -> IO
+  ;; Alist -> IO
   (format "| %s | %s |\n"
 	  (an-assoc-val 'column alist)
 	  (an-assoc-val 'type alist)))
