@@ -134,8 +134,23 @@
 
 ;;; Reporting.
 
-(defvar *an-columns-table-header*
-  "|| Column || Type || Filter? || Metric? || Description ||\n")
+(defvar *an-dimensions-table-header*
+  "|| Column || Type || Filter? || Description ||\n")
+
+(defvar *an-metrics-table-header*
+  "|| Column || Type || Description ||\n")
+
+(defvar *an-havings-hash* (make-hash-table :test 'equal)) ; -> Exists?
+(defvar *an-filters-hash* (make-hash-table :test 'equal)) ; -> Exists?
+(defvar *an-columns-hash* (make-hash-table :test 'equal)) ; -> Type
+
+(defun an-build-columns-hash (report-meta-alist)
+  ;; Array -> State!
+  (mapc (lambda (alist) 
+	  (puthash (an-assoc-val 'column alist) 
+		   (an-assoc-val 'type alist) 
+		   *an-columns-hash*))
+	(assoc-val 'columns report-meta-alist)))
 
 (defun an-print-column-standard-fields (alist)
   ;; Alist -> IO
@@ -143,14 +158,9 @@
 	  (an-assoc-val 'column alist)
 	  (an-assoc-val 'type alist)))
 
-(defun an-process-columns (array-of-alists)
-  ;; Array -> IO State!
-  (an-print-to-scratch-buffer
-   (format "\nh4. Dimensions\n\n")) ;; FIXME: Is this the right header?
-  (an-print-to-scratch-buffer
-   (format *an-columns-table-header*))
-  (mapc (lambda (alist)
-	  (an-process-column alist))
-	array-of-alists))
+(defun add-type-if-exists (key type)
+  ;; Symbol String -> IO
+  (if (gethash key metric-hash-table)
+      (puthash key type metric-hash-table)))
 
 ;; anx-docgen.el ends here.
