@@ -57,13 +57,47 @@
 
 ** Data Format
 
-   You are given an association list. For each /key/ in the alist, you
-   will have to print the /key/ (since it's the name of the table of
-   documentation) and then check the value of /key/ as follows:
-   
-   1. If /key/ yields an array of alists, then iterate over the array,
-      performing `an-process-object'.
+   You are given an association list with the following substructures:
 
-   2. If an array (but not an array of alists, for which you've
-      already checked), then just print the values in the array one
-      after another, separated by newlines.
+   1. time_intervals (array of strings)
+
+   2. havings (array of 1:alists)
+
+   3. filters (array of 2:alists)
+
+   4. retention_days (string)
+
+   5. columns (array of 2:alists)
+
+   6. time_granularity (string)
+
+   The following dependencies exist:
+
+   - `Havings' contains the ``Metrics'', which is a subset of the `columns'.
+
+   - `Filters' is the subset of `columns' which can be filtered by.
+
+   - `Columns' is a superset that includes `havings' and `filters'.
+     
+   Perhaps what we should do is create three hash tables,
+   `havings-hash', `filters-hash' `column-types-hash'. As part of our
+   pre-processing step, we'll add each item from `havings', `filters',
+   and `columns' to their respective hash tables. The first two will
+   add simple existence checks. For `columns', we want to store the
+   `type' for later retrieval.
+
+   Then, we iterate over `columns', checking each column against the
+   `filters-hash' and `havings-hash'. If it's in `filters-hash', we output
+   that in the documentation. If it's in `havings-hash', we add the
+   `type' as the value to that hash key for the ``Metrics'' table.
+
+   Thus we'll end up with headings for our documentation tables like
+   so:
+
+*** Dimensions
+
+| Column | Type | Filter By? | Description |
+
+*** Metrics
+
+| Column | Type | Description |
