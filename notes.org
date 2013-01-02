@@ -43,17 +43,32 @@
 
 * Reports
 
-  It seems that there are three (3) main types of listings returned by
-  the Report Service's `/meta' calls -- these examples are drawn from
-  the Network Analytics report:
+  There are several types of listings returned by the Report Service's
+  `/meta' calls -- these examples are drawn from the Network Analytics
+  report:
 
+  - /time_intervals/: 1 line
   - /columns/: 124 lines
   - /filters/: 45 lines
   - /havings/: 20 lines
+  - /label_fields/: 1 line
+  - /time_granularity/: 1 line
 
-  Next step: investigate what the intersections of these sets actually
-  mean, and how the API's representation maps to the UI's ``metrics &
-  dimensions'' language.
+  The report API documentation, by contrast, uses the following format:
+
+  - Time Frame
+
+    This just lists the items in the `time_intervals' field.
+
+  - Dimensions
+
+    These are everything the API calls the `columns', minus what it
+    calls the `havings'. An array of alists.
+
+  - Metrics
+
+    These are the items the API calls the `havings'. Also an array of
+    alists.
 
 ** Data Format
 
