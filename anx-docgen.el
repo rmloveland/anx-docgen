@@ -57,11 +57,20 @@
 
 (defun an-print-object-standard-fields (object)
   ;; Alist -> IO
-  (format "| %s | %s | %s | %s | | | |\n"
-	  (an-assoc-val 'name object)
-	  (an-assoc-val 'type object)
-	  (an-translate-boolean (an-assoc-val 'sort_by object))
-	  (an-translate-boolean (an-assoc-val 'filter_by object))))
+  (let* ((fields (an-list-object-standard-fields object)))
+    (format *an-table-row*
+	    (pop fields)
+	    (pop fields)
+	    (pop fields)
+	    (pop fields))))
+
+(defun an-list-object-standard-fields (object)
+  ;; Alist -> List
+  (list
+   (an-assoc-val 'name object)
+   (an-assoc-val 'type object)
+   (an-translate-boolean (an-assoc-val 'sort_by object))
+   (an-translate-boolean (an-assoc-val 'filter_by object))))
 
 (defun an-object-has-fieldsp (object)
   ;; Alist -> Boolean
@@ -94,6 +103,9 @@
 
 (defvar *an-table-header*
   "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||\n")
+
+(defvar *an-table-row*
+  "| %s | %s | %s | %s | | | |\n")
 
 (defun an-print-to-scratch-buffer (format-string)
   (princ format-string
