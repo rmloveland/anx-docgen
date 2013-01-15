@@ -162,7 +162,7 @@
 	  (puthash (an-assoc-val 'column alist) 
 		   (an-assoc-val 'type alist) 
 		   *an-columns-hash*))
-	(assoc-val 'columns report-meta-alist)))
+	(an-assoc-val 'columns report-meta-alist)))
 
 (defun an-print-column-standard-fields (alist)
   ;; Alist -> IO
