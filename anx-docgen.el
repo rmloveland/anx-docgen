@@ -164,6 +164,20 @@
 		   *an-columns-hash*))
 	(an-assoc-val 'columns report-meta-alist)))
 
+(defun an-build-filters-hash (report-meta-alist)
+  ;; Array -> State!
+  (mapc (lambda (alist) 
+	  (puthash (an-assoc-val 'column alist) 
+		   (an-assoc-val 'type alist)
+		   *an-filters-hash*))
+	(an-assoc-val 'filters report-meta-alist)))
+
+(defun an-build-havings-hash (report-meta-alist)
+  ;; Array -> State!
+  (mapc (lambda (alist) 
+	  (puthash (an-assoc-val 'column alist) t *an-havings-hash*))
+	(an-assoc-val 'havings report-meta-alist)))
+
 (defun an-print-column-standard-fields (alist)
   ;; Alist -> IO
   (format "| %s | %s |\n"
