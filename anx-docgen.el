@@ -184,6 +184,15 @@
 	  (an-assoc-val 'column alist)
 	  (an-assoc-val 'type alist)))
 
+(defun an-build-dimensions-list ()
+  ;; -> List
+  (let ((results nil))
+    (maphash (lambda (k v) 
+	       (unless (gethash k *an-filters-hash*)
+		 (push k results)))
+	     *an-columns-hash*)
+    results))
+
 (defun add-type-if-exists (key type)
   ;; Symbol String -> IO
   (if (gethash key metric-hash-table)
