@@ -193,9 +193,4 @@
 	     *an-columns-hash*)
     results))
 
-(defun add-type-if-exists (key type)
-  ;; Symbol String -> IO
-  (if (gethash key metric-hash-table)
-      (puthash key type metric-hash-table)))
-
 ;; anx-docgen.el ends here.
