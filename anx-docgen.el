@@ -193,4 +193,9 @@
 	     *an-columns-hash*)
     results))
 
+(defun an-build-time-intervals-list (report-meta-alist)
+  ;; Alist -> List
+  (mapcar (lambda (x) x)
+	  (an-assoc-val 'time_intervals network-meta)))
+
 ;; anx-docgen.el ends here.
