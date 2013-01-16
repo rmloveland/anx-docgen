@@ -198,4 +198,24 @@
   (mapcar (lambda (x) x)
 	  (an-assoc-val 'time_intervals network-meta)))
 
+(defun an-get-dimension-type (dimension)
+  ;; String -> String
+  (if (an-dimensionp dimension)
+      (gethash dimension *an-columns-hash*)
+    (error (format "%s is not a dimension!" dimension))))
+
+(defun an-get-metric-type (metric)
+  ;; String -> String
+  (if (an-metricp metric)
+      (gethash metric *an-havings-hash*)
+    (error (format "%s is not a metric!" metric))))
+
+(defun an-dimensionp (dimension)
+  ;; String -> Boolean
+  (member dimension (an-build-dimensions-list)))
+
+(defun an-metricp (metric)
+  ;; String -> Boolean
+  (gethash metric *an-havings-hash*))
+
 ;; anx-docgen.el ends here.
