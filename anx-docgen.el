@@ -188,7 +188,7 @@
   ;; -> List
   (let ((results nil))
     (maphash (lambda (k v) 
-	       (unless (gethash k *an-filters-hash*)
+	       (unless (gethash k *an-havings-hash*)
 		 (push k results)))
 	     *an-columns-hash*)
     results))
