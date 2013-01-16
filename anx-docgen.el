@@ -147,10 +147,10 @@
 ;;; Reporting.
 
 (defvar *an-dimensions-table-header*
-  "|| Column || Type || Filter? || Description ||\n")
+  "\n|| Column || Type || Filter? || Description ||\n")
 
 (defvar *an-metrics-table-header*
-  "|| Column || Type || Description ||\n")
+  "\n|| Column || Type || Formula || Description ||\n")
 
 (defvar *an-havings-hash* (make-hash-table :test 'equal)) ; -> Exists?
 (defvar *an-filters-hash* (make-hash-table :test 'equal)) ; -> Exists?
@@ -191,7 +191,15 @@
 	       (unless (gethash k *an-havings-hash*)
 		 (push k results)))
 	     *an-columns-hash*)
-    results))
+    (reverse results)))
+
+(defun an-build-metrics-list ()
+  ;; -> List
+  (let ((results nil))
+    (maphash (lambda (k v) 
+		 (push k results))
+	     *an-havings-hash*)
+    (reverse results)))
 
 (defun an-build-time-intervals-list (report-meta-alist)
   ;; Alist -> List
@@ -217,5 +225,51 @@
 (defun an-metricp (metric)
   ;; String -> Boolean
   (gethash metric *an-havings-hash*))
+
+(defun an-print-report-meta (report-meta)
+  ;; Array -> IO State!
+  (progn
+    (an-build-columns-hash report-meta)
+    (an-build-filters-hash report-meta)
+    (an-build-havings-hash report-meta)
+    ;; (an-print-time-intervals report-meta)
+    (an-print-dimensions-table)
+    (an-print-metrics-table)
+    (an-clear-hashes)))
+
+(defun an-really-print-report-meta ()
+  ;; -> IO State!
+  (interactive)
+  (let ((report-meta (read (buffer-string))))
+    (an-print-report-meta report-meta)))
+
+(defun an-print-time-intervals (report-meta)
+  (an-build-time-intervals-list report-meta))
+
+(defun an-print-dimensions-table ()
+  ;; Array -> IO State!
+  (progn 
+    (an-print-to-scratch-buffer *an-dimensions-table-header*)
+    (mapcar (lambda (elem)
+	      (an-print-to-scratch-buffer (format "| %s | %s | %s | |\n" elem 
+						  (gethash elem *an-columns-hash*)
+						  (if (gethash elem *an-filters-hash*)
+						      "Yes"
+						    "No"))))
+	    (an-build-dimensions-list))))
+
+(defun an-print-metrics-table ()
+  ;; Array -> IO State!
+  (progn
+    (an-print-to-scratch-buffer *an-metrics-table-header*)
+    (mapcar (lambda (elem)
+	      (an-print-to-scratch-buffer (format "| %s | %s | | |\n" elem (gethash elem *an-columns-hash*))))
+	    (an-build-metrics-list))))
+
+(defun an-clear-hashes ()
+  ;; -> State!
+  (progn (clrhash *an-havings-hash*)
+	 (clrhash *an-columns-hash*)
+	 (clrhash *an-filters-hash*)))
 
 ;; anx-docgen.el ends here.
