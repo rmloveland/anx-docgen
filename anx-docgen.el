@@ -3,13 +3,15 @@
 (defvar *an-stack* nil
   "The stack where we stash our second-pass field definitions.")
 
-(defun an-alistp (object)
+(defun an-alistp (alist)
   ;; Object -> Boolean
-  (and (listp object)
-       (every #'consp object)))
+  "Determine if ALIST is an association list."
+  (and (listp alist)
+       (every #'consp alist)))
 
 (defun an-get-alist-keys (alist)
   ;; Alist -> List
+  "If ALIST is an association list, return a list of its keys."
   (if (an-alistp alist)
       (mapcar (lambda (elem)
 		(car elem))
@@ -18,11 +20,15 @@
 
 (defun an-array-of-alistsp (array)
   ;; Object -> Boolean
+  "Determine if ARRAY is an array of association lists."
   (and (arrayp array)
        (an-alistp (elt array 0))))
 
 (defun an-assoc-val (key alist)
   ;; Symbol Alist -> Object
+  "Given KEY and ALIST, return the value referenced by KEY.
+Unlike `assoc', this function does not return the entire
+key-value pair."
   (let ((result (assoc key alist)))
     (if result
 	(cdr result)
@@ -30,27 +36,35 @@
 
 (defun an-get-random-alist (array-of-alists)
   ;; Array of Alists -> Alist
+  "Given an ARRAY-OF-ALISTS, return a random association list."
   (let* ((len (length array-of-alists))
 	 (rand (random len)))
     (elt array-of-alists rand)))
 
 (defun an-stack-push (item)
   ;; Item -> State!
+  "Push ITEM onto the global `*an-stack*'."
   (push item *an-stack*))
 
 (defun an-stack-pop ()
   ;; State!
+  "Pop an item off of the global `*an-stack*'."
   (pop *an-stack*))
 
 (defun an-stack-emptyp ()
+  ;; -> Boolean
+  "Check if the global `*an-stack*' is empty."
   (null *an-stack*))
 
 (defun an-clear-stack ()
   ;; State!
+  "Clear the contents of the global `*an-stack*'."
   (progn (setq *an-stack* nil)))
 
 (defun an-translate-boolean (symbol)
   ;; Symbol -> String
+  "Given a SYMBOL with a `false' boolean value in JSON, return ``No''.
+Otherwise, return ``Yes''."
   (if (equal symbol :json-false)
       "No"
     "Yes"))
