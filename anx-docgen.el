@@ -286,4 +286,35 @@ Otherwise, return ``Yes''."
 	 (clrhash *an-columns-hash*)
 	 (clrhash *an-filters-hash*)))
 
+;;; Working with existing documentation
+
+(defun anx-split-line-string (line-string)
+  ;; String -> List
+  (split-string line-string "|" t))
+
+(defun anx-join-line-list (line-list)
+  ;; List -> String
+  (mapconcat (lambda (x) x) 
+	     (mapcar (lambda (box) box) 
+		     line-list)
+	     "|"))
+
+(defun anx-build-alist (keys vals)
+  ;; List List -> Alist
+  (anx-build-alist-aux keys vals '()))
+
+(defun anx-build-alist-aux (keys vals results)
+  ;; List List List -> Alist
+  (cond ((null keys) results)
+	(t
+	 (let* ((key (car keys))
+		(val (car vals))
+		(rest-keys (cdr keys))
+		(rest-vals (cdr vals))
+		(kv 
+		 (if (null rest-keys)
+		     (cons key (mapconcat (lambda (x) x) (cons val rest-vals) "|"))
+		   (cons key val))))
+	   (anx-build-alist-aux rest-keys rest-vals (cons kv results))))))
+
 ;; anx-docgen.el ends here.
