@@ -1,4 +1,4 @@
-;;; ANX-Docgen
+;;; ANX-Docgen  -*- lexical-binding: t -*-
 
 (defvar *anx-stack* nil
   "The stack where we stash our second-pass field definitions.")
@@ -316,5 +316,36 @@ Otherwise, return ``Yes''."
 		     (cons key (mapconcat (lambda (x) x) (cons val rest-vals) "|"))
 		   (cons key val))))
 	   (anx-build-alist-aux rest-keys rest-vals (cons kv results))))))
+
+;;; Mobile Error Messages
+
+(defun anx-sdk-error:on (error-object)
+  (anx-assoc-val 'on error-object))
+
+(defun anx-sdk-error:message (error-object)
+  (anx-assoc-val 'message error-object))
+
+(defun anx-sdk-error:key (error-object)
+  (anx-assoc-val 'key error-object))
+
+(defvar *anx-sdk-error-table-header*
+  "\n|| SDK Type || Message || Key ||\n")
+
+(defun anx-really-print-sdk-error-table ()
+  ;; -> IO State!
+  (interactive)
+  (let ((sdk-error-array (read (buffer-string))))
+    (anx-print-sdk-error-table sdk-error-array)))
+
+(defun anx-print-sdk-error-table (sdk-error-array)
+  ;; Array -> IO State!
+  (progn
+    (anx-print-to-scratch-buffer *anx-sdk-error-table-header*)
+    (mapcar (lambda (e)
+	      (let ((sdk-type (anx-sdk-error:on e))
+		    (message (anx-sdk-error:message e))
+		    (key (anx-sdk-error:key e)))
+		(anx-print-to-scratch-buffer (format "| %s | %s | {{%s}} |\n" sdk-type message key))))
+	    sdk-error-array)))
 
 ;; anx-docgen.el ends here.
