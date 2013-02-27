@@ -319,6 +319,13 @@ Otherwise, return ``Yes''."
 
 ;;; Mobile Error Messages
 
+(defvar *anx-sdk-error-table-header*
+  "\n|| SDK Type || Error Message || Key ||\n")
+
+(defvar *anx-android-sdk-errors* (make-hash-table :test 'equal))
+
+(defvar *anx-ios-sdk-errors* (make-hash-table :test 'equal))
+
 (defun anx-sdk-error:on (error-object)
   (anx-assoc-val 'on error-object))
 
@@ -328,8 +335,19 @@ Otherwise, return ``Yes''."
 (defun anx-sdk-error:key (error-object)
   (anx-assoc-val 'key error-object))
 
-(defvar *anx-sdk-error-table-header*
-  "\n|| SDK Type || Message || Key ||\n")
+(defun anx-sdk-error:android-p (error-object)
+  ;; Alist -> Boolean
+  (if (aref (anx-sdk-error:on error-object) 0)
+      t
+    nil))
+
+(defun anx-sdk-error:ios-p (error-object)
+  ;; Alist -> Boolean
+  (let ((len 
+	 (length (anx-sdk-error:on error-object))))
+    (if (>= len 2)
+	t
+      nil)))
 
 (defun anx-really-print-sdk-error-table ()
   ;; -> IO State!
