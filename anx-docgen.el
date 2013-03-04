@@ -317,6 +317,37 @@ Otherwise, return ``Yes''."
 		   (cons key val))))
 	   (anx-build-alist-aux rest-keys rest-vals (cons kv results))))))
 
+(defun anx-table-lines-to-list (buf)
+  ;; Buffer -> List
+  (with-current-buffer buf
+    (let ((result nil))
+      (save-excursion
+	(goto-char (point-min))
+	(while (re-search-forward "^|[^|]" nil t)
+	  (let ((beg (point))
+		(end)
+		(str)
+		(inhibit-field-text-motion t))
+	    (re-search-forward "|\n" nil t)
+	    (setq end (point))
+	    (setq str (buffer-substring-no-properties beg end))
+	    (push str result)
+	    (goto-char beg))))
+      (reverse result))))
+
+(defun anx-print-table-lines (buf)
+  ;; List -> IO
+  (let ((list (anx-table-lines-to-list buf)))
+    (mapcar (lambda (elem)
+	      (anx-print-to-scratch-buffer (format "| %s" elem)))
+	    list)))
+
+(defun anx-really-print-table-lines ()
+  ;; -> IO
+  (interactive)
+  (let ((buf (current-buffer)))
+    (anx-print-table-lines buf)))
+
 ;;; Mobile Error Messages
 
 (defvar *anx-sdk-error-table-header*
