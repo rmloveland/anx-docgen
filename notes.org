@@ -1,0 +1,13 @@
+
+Using `anx-process-object', create a hash table with all of the most
+current names from the /meta call.
+
+In the new `Working with Existing Documentation' code section, build
+up a hash table from the lines of text in each existing wiki table.
+
+Loop over the first hash, checking if it already exists in the
+second. If not, insert a line into the new documentation table being
+built up at that point. If it does already exist, just poke that
+existing line into the new table in the right place.
+
+Dude! Sweet!
