@@ -352,7 +352,7 @@ Otherwise, return ``Yes''."
 ;;; Mobile Error Messages
 
 (defvar *anx-sdk-error-table-header*
-  "\n|| Android? || iOS? || Error Message || Key ||\n")
+  "\n|| Android? || iOS? || Message || Key ||\n")
 
 (defvar *anx-android-sdk-errors* (make-hash-table :test 'equal))
 
