@@ -65,7 +65,8 @@ key-value pair."
   ;; Symbol -> String
   "Given a SYMBOL with a `false' boolean value in JSON, return ``No''.
 Otherwise, return ``Yes''."
-  (if (equal symbol :json-false)
+  (if (or (equal symbol :json-false)
+	  (null symbol))
       "No"
     "Yes"))
 
@@ -351,7 +352,7 @@ Otherwise, return ``Yes''."
 ;;; Mobile Error Messages
 
 (defvar *anx-sdk-error-table-header*
-  "\n|| SDK Type || Error Message || Key ||\n")
+  "\n|| Android? || iOS? || Error Message || Key ||\n")
 
 (defvar *anx-android-sdk-errors* (make-hash-table :test 'equal))
 
@@ -368,15 +369,17 @@ Otherwise, return ``Yes''."
 
 (defun anx-sdk-error:android-p (error-object)
   ;; Alist -> Boolean
-  (if (aref (anx-sdk-error:on error-object) 0)
-      t
-    nil))
+  (let* ((devices (anx-sdk-error:on error-object))
+	 (len (length devices)))
+    (if (>= len 1)
+	t
+      nil)))
 
 (defun anx-sdk-error:ios-p (error-object)
   ;; Alist -> Boolean
-  (let ((len 
-	 (length (anx-sdk-error:on error-object))))
-    (if (>= len 2)
+  (let* ((devices (anx-sdk-error:on error-object))
+	 (len (length devices)))
+    (if (> len 1)
 	t
       nil)))
 
@@ -391,10 +394,11 @@ Otherwise, return ``Yes''."
   (progn
     (anx-print-to-scratch-buffer *anx-sdk-error-table-header*)
     (mapcar (lambda (e)
-	      (let ((sdk-type (anx-sdk-error:on e))
+	      (let ((android-p (anx-translate-boolean (anx-sdk-error:android-p e)))
+		    (ios-p (anx-translate-boolean (anx-sdk-error:ios-p e)))
 		    (message (anx-sdk-error:message e))
 		    (key (anx-sdk-error:key e)))
-		(anx-print-to-scratch-buffer (format "| %s | %s | {{%s}} |\n" sdk-type message key))))
+		(anx-print-to-scratch-buffer (format "| %s | %s | %s | {{%s}} |\n" android-p ios-p message key))))
 	    sdk-error-array)))
 
 ;; anx-docgen.el ends here.
