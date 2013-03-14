@@ -423,13 +423,13 @@ Otherwise, return ``Yes''."
 		    (puthash key message *anx-ios-sdk-errors*))))
 	    sdk-error-array)
     ;; Then, maphash and build each table, starting with iOS
-    (anx-print-to-scratch-buffer (format "\n\nh2. iOS\n\n"))
+    (anx-print-to-scratch-buffer (format "\n\nh4. iOS\n\n"))
     (anx-print-to-scratch-buffer *anx-new-sdk-error-table-header*)
     (maphash (lambda (k v)
 	       (anx-print-to-scratch-buffer (format "| %s | {{%s}} |\n" v k)))
 	     *anx-ios-sdk-errors*)
     ;; Now for Android
-    (anx-print-to-scratch-buffer (format "\n\nh2. Android\n\n"))
+    (anx-print-to-scratch-buffer (format "\n\nh4. Android\n\n"))
     (anx-print-to-scratch-buffer *anx-new-sdk-error-table-header*)
     (maphash (lambda (k v)
 	       (anx-print-to-scratch-buffer (format "| %s | {{%s}} |\n" v k)))
