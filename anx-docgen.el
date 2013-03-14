@@ -354,6 +354,9 @@ Otherwise, return ``Yes''."
 (defvar *anx-sdk-error-table-header*
   "\n|| Android? || iOS? || Message || Key ||\n")
 
+(defvar *anx-new-sdk-error-table-header*
+  "\n|| Message || Key ||\n")
+
 (defvar *anx-android-sdk-errors* (make-hash-table :test 'equal))
 
 (defvar *anx-ios-sdk-errors* (make-hash-table :test 'equal))
@@ -383,11 +386,7 @@ Otherwise, return ``Yes''."
 	t
       nil)))
 
-(defun anx-really-print-sdk-error-table ()
-  ;; -> IO State!
-  (interactive)
-  (let ((sdk-error-array (read (buffer-string))))
-    (anx-print-sdk-error-table sdk-error-array)))
+;; Old version.
 
 (defun anx-print-sdk-error-table (sdk-error-array)
   ;; Array -> IO State!
@@ -400,5 +399,46 @@ Otherwise, return ``Yes''."
 		    (key (anx-sdk-error:key e)))
 		(anx-print-to-scratch-buffer (format "| %s | %s | %s | {{%s}} |\n" android-p ios-p message key))))
 	    sdk-error-array)))
+
+(defun anx-really-print-sdk-error-table ()
+  ;; -> IO State!
+  (interactive)
+  (let ((sdk-error-array (read (buffer-string))))
+    (anx-print-sdk-error-table sdk-error-array)))
+
+;; New version, prints one table for each device.
+
+(defun anx-print-sdk-error-tables (sdk-error-array)
+  ;; Array -> IO State!
+  (progn
+    ;; First, build hash tables
+    (mapcar (lambda (e)
+	      (let ((android-p (anx-sdk-error:android-p e))
+		    (ios-p (anx-sdk-error:ios-p e))
+		    (message (anx-sdk-error:message e))
+		    (key (anx-sdk-error:key e)))
+		(if android-p
+		    (puthash key message *anx-android-sdk-errors*))
+		(if ios-p
+		    (puthash key message *anx-ios-sdk-errors*))))
+	    sdk-error-array)
+    ;; Then, maphash and build each table, starting with iOS
+    (anx-print-to-scratch-buffer (format "\n\nh2. iOS\n\n"))
+    (anx-print-to-scratch-buffer *anx-new-sdk-error-table-header*)
+    (maphash (lambda (k v)
+	       (anx-print-to-scratch-buffer (format "| %s | {{%s}} |\n" v k)))
+	     *anx-ios-sdk-errors*)
+    ;; Now for Android
+    (anx-print-to-scratch-buffer (format "\n\nh2. Android\n\n"))
+    (anx-print-to-scratch-buffer *anx-new-sdk-error-table-header*)
+    (maphash (lambda (k v)
+	       (anx-print-to-scratch-buffer (format "| %s | {{%s}} |\n" v k)))
+	     *anx-android-sdk-errors*)))
+
+(defun anx-really-print-sdk-error-tables ()
+  ;; -> IO State!
+  (interactive)
+  (let ((sdk-error-array (read (buffer-string))))
+    (anx-print-sdk-error-tables sdk-error-array)))
 
 ;; anx-docgen.el ends here.
