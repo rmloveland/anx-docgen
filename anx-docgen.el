@@ -287,7 +287,17 @@ Otherwise, return ``Yes''."
 	 (clrhash *anx-columns-hash*)
 	 (clrhash *anx-filters-hash*)))
 
+	 
 ;;; Working with existing documentation
+
+(defvar *anx-current-meta-names* (make-hash-table))
+
+(defvar *anx-existing-table-names* (make-hash-table))
+
+(defun anx-clear-meta-hashes ()
+  ;; -> State!
+  (progn (clrhash *anx-current-meta-names*)
+	 (clrhash *anx-existing-table-names*)))
 
 (defun anx-split-line-string (line-string)
   ;; String -> List
@@ -336,6 +346,34 @@ Otherwise, return ``Yes''."
 	    (goto-char beg))))
       (reverse result))))
 
+(defun anx-extract-existing-names-list (table-list)
+  ;; List -> List
+  (mapcar (lambda (line-string)
+	    (let ((first-word (car (anx-split-line-string line-string))))
+	      (string-match "[a-z_]+" first-word 0)
+	      (match-string-no-properties 0 first-word)))
+	  table-list))
+
+;; Call in the wiki text table buffer
+
+(defun anx-build-existing-table-names-hash (table-list)
+  ;; List -> State!
+  (let ((names (anx-extract-existing-names-list table-list)))
+    (mapcar (lambda (name) (puthash name 1 *anx-existing-table-names*) names))))
+
+;; Call in the foo/meta lisp buffer
+
+(defun anx-build-current-meta-names-hash (array-of-alists)
+  (let ((names (mapcar (lambda (alist)
+			 (anx-assoc-val 'name alist))
+		       placement-meta)))
+    (mapcar (lambda (name) (puthash name 1 *anx-existing-table-names*) names))))
+
+(defun anx-table-undocumented-field-p (field)
+  ;; String -> Boolean
+  (and (gethash field *anx-current-meta-names*)
+       (not (gethash *anx-existing-table-names*))))
+
 (defun anx-print-table-lines (buf)
   ;; List -> IO
   (let ((list (anx-table-lines-to-list buf)))
@@ -360,6 +398,11 @@ Otherwise, return ``Yes''."
 (defvar *anx-android-sdk-errors* (make-hash-table :test 'equal))
 
 (defvar *anx-ios-sdk-errors* (make-hash-table :test 'equal))
+
+(defun anx-clear-sdk-error-hashes ()
+  ;; -> State!
+  (progn (clrhash *anx-android-sdk-errors*)
+	 (clrhash *anx-ios-sdk-errors*)))
 
 (defun anx-sdk-error:on (error-object)
   (anx-assoc-val 'on error-object))
