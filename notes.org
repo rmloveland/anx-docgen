@@ -1,13 +1,45 @@
+#+title: Notes
 
-Using `anx-process-object', create a hash table with all of the most
-current names from the /meta call.
+* New formats needed
 
-In the new `Working with Existing Documentation' code section, build
-up a hash table from the lines of text in each existing wiki table.
+  Better idea: let's get the documents themselves into Lisp as an
+  intermediate data format. From there we can transform to whatever we
+  need.
 
-Loop over the first hash, checking if it already exists in the
-second. If not, insert a line into the new documentation table being
-built up at that point. If it does already exist, just poke that
-existing line into the new table in the right place.
+** Standard Services
 
-Dude! Sweet!
+   "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||"
+   '("Name" "Type" "Sort By?" "Filter By?" "Description" "Default" "Required On")
+
+   "| inventory_attributes | array of objects | No | No | | | |"
+   '((inventory_attributes . '((type . "array of objects")
+        (sort_by . nil)
+	(filter_by . nil)
+	(description . "")
+	(default . "")
+	(required_on . "")))
+     (...))
+
+** Report Service
+
+*** Dimensions
+
+    "|| Column || Type || Filter? || Description ||"
+    '("Column"  "Type"  "Filter?"  "Description")
+
+    "| month | date | Yes | |"
+    '((month . '((type . "date")
+                 (filter_by . t)
+		 (description . "")))
+      (...))
+
+*** Metrics
+
+    "|| Column || Type || Formula || Description ||"
+    '("Column"  "Type"  "Formula"  "Description")
+
+    "| imps | int | | |"
+    '((imps . (type . int)
+              (formula . "")
+	      (description . ""))
+      (...))
