@@ -346,7 +346,7 @@ Otherwise, return ``Yes''."
 	    (goto-char beg))))
       (reverse result))))
 
-(defun anx-extract-existing-names-list (table-list)
+(defun anx-extract-field-names-list (table-list)
   ;; List -> List
   (mapcar (lambda (line-string)
 	    (let ((first-word (car (anx-split-line-string line-string))))
@@ -354,25 +354,17 @@ Otherwise, return ``Yes''."
 	      (match-string-no-properties 0 first-word)))
 	  table-list))
 
-;; Call in the wiki text table buffer
-
 (defun anx-build-existing-table-names-hash (table-list)
   ;; List -> State!
   (let ((names (anx-extract-existing-names-list table-list)))
     (mapcar (lambda (name) (puthash name 1 *anx-existing-table-names*) names))))
 
-;; Call in the foo/meta lisp buffer
-
 (defun anx-build-current-meta-names-hash (array-of-alists)
   (let ((names (mapcar (lambda (alist)
 			 (anx-assoc-val 'name alist))
-		       placement-meta)))
-    (mapcar (lambda (name) (puthash name 1 *anx-existing-table-names*) names))))
-
-(defun anx-table-undocumented-field-p (field)
-  ;; String -> Boolean
-  (and (gethash field *anx-current-meta-names*)
-       (not (gethash *anx-existing-table-names*))))
+		       array-of-alists)))
+    (mapcar (lambda (name) (puthash name 1 *anx-existing-table-names*))
+	    names)))
 
 (defun anx-print-table-lines (buf)
   ;; List -> IO
