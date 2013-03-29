@@ -176,7 +176,8 @@ additional fields that need to be defined in their own tables."
 
 (defun anx-really-print-meta ()
   ;; -> IO State!
-  "Generate documentation from the contents of the current buffer."
+  "Generates API service documentation from the contents of the current buffer.
+Prints its output to the *scratch* buffer."
   (interactive)
   (let ((array-of-alists (read (buffer-string))))
     (anx-print-meta array-of-alists)))
@@ -184,19 +185,27 @@ additional fields that need to be defined in their own tables."
 
 ;; Part 2. Reporting
 
-(defvar *anx-dimensions-table-header*
-  "\n|| Column || Type || Filter? || Description ||\n")
+(defvar *anx-report-dimensions-table-header*
+  "\n|| Column || Type || Filter? || Description ||\n"
+  "The format string used for Dimensions table columns in documentation for reporting API services.")
 
-(defvar *anx-metrics-table-header*
-  "\n|| Column || Type || Formula || Description ||\n")
+(defvar *anx-report-metrics-table-header*
+  "\n|| Column || Type || Formula || Description ||\n"
+  "The format string used for Metrics table columns in documentation for reporting API services.")
 
-(defvar *anx-havings-hash* (make-hash-table :test 'equal)) ; -> Exists?
-(defvar *anx-filters-hash* (make-hash-table :test 'equal)) ; -> Exists?
-(defvar *anx-columns-hash* (make-hash-table :test 'equal)) ; -> Type
+(defvar *anx-havings-hash* (make-hash-table :test 'equal)
+  "Records the existence of 'column fields (using t) from the 'havings' array returned by Report Service /meta calls")
+
+(defvar *anx-filters-hash* (make-hash-table :test 'equal)
+  "Associates 'column and 'type fields from the 'filters' array returned by Report Service /meta calls")
+
+(defvar *anx-columns-hash* (make-hash-table :test 'equal)
+  "Associates 'column and 'type fields from the 'columns' array returned by Report Service /meta calls")
 
 (defun anx-build-columns-hash (report-meta-alist)
   ;; Array -> State!
-  (mapc (lambda (alist) 
+  "Given REPORT-META-ALIST, builds *anx-columns-hash* from it."
+  (mapc (lambda (alist)
 	  (puthash (anx-assoc-val 'column alist) 
 		   (anx-assoc-val 'type alist) 
 		   *anx-columns-hash*))
@@ -204,6 +213,7 @@ additional fields that need to be defined in their own tables."
 
 (defun anx-build-filters-hash (report-meta-alist)
   ;; Array -> State!
+  "Given REPORT-META-ALIST, builds *anx-filters-hash* from it."
   (mapc (lambda (alist) 
 	  (puthash (anx-assoc-val 'column alist) 
 		   (anx-assoc-val 'type alist)
@@ -212,18 +222,15 @@ additional fields that need to be defined in their own tables."
 
 (defun anx-build-havings-hash (report-meta-alist)
   ;; Array -> State!
+  "Given REPORT-META-ALIST, builds *anx-havings-hash* from it."
   (mapc (lambda (alist) 
 	  (puthash (anx-assoc-val 'column alist) t *anx-havings-hash*))
 	(anx-assoc-val 'havings report-meta-alist)))
 
-(defun anx-print-column-standard-fields (alist)
-  ;; Alist -> IO
-  (format "| %s | %s |\n"
-	  (anx-assoc-val 'column alist)
-	  (anx-assoc-val 'type alist)))
-
 (defun anx-build-dimensions-list ()
   ;; -> List
+  "Builds a list from elements of 'columns' that are not also in 'havings'.
+In other words, return only the dimensions and not the metrics."
   (let ((results nil))
     (maphash (lambda (k v) 
 	       (unless (gethash k *anx-havings-hash*)
@@ -233,61 +240,39 @@ additional fields that need to be defined in their own tables."
 
 (defun anx-build-metrics-list ()
   ;; -> List
+  "Builds a list from elements of 'havings', which are metrics."
   (let ((results nil))
     (maphash (lambda (k v) 
 		 (push k results))
 	     *anx-havings-hash*)
     (reverse results)))
 
-(defun anx-build-time-intervals-list (report-meta-alist)
-  ;; Alist -> List
-  (mapcar (lambda (x) x)
-	  (anx-assoc-val 'time_intervals network-meta)))
-
-(defun anx-get-dimension-type (dimension)
-  ;; String -> String
-  (if (anx-dimensionp dimension)
-      (gethash dimension *anx-columns-hash*)
-    (error (format "%s is not a dimension!" dimension))))
-
-(defun anx-get-metric-type (metric)
-  ;; String -> String
-  (if (anx-metricp metric)
-      (gethash metric *anx-havings-hash*)
-    (error (format "%s is not a metric!" metric))))
-
-(defun anx-dimensionp (dimension)
-  ;; String -> Boolean
-  (member dimension (anx-build-dimensions-list)))
-
-(defun anx-metricp (metric)
-  ;; String -> Boolean
-  (gethash metric *anx-havings-hash*))
-
-(defun anx-print-report-meta (report-meta)
+(defun anx-print-report-meta (report-meta-alist)
   ;; Array -> IO State!
+  "Generates report documentation from REPORT-META-ALIST.
+Along the way, sets up and tears down hash tables to hold the
+necessary state."
   (progn
-    (anx-build-columns-hash report-meta)
-    (anx-build-filters-hash report-meta)
-    (anx-build-havings-hash report-meta)
-    ;; (anx-print-time-intervals report-meta)
+    (anx-build-columns-hash report-meta-alist)
+    (anx-build-filters-hash report-meta-alist)
+    (anx-build-havings-hash report-meta-alist)
     (anx-print-dimensions-table)
     (anx-print-metrics-table)
     (anx-clear-hashes)))
 
 (defun anx-really-print-report-meta ()
   ;; -> IO State!
+  "Generates Reporting API documentation from the contents of the current buffer.
+Prints its output to the *scratch* buffer."
   (interactive)
   (let ((report-meta (read (buffer-string))))
     (anx-print-report-meta report-meta)))
 
-(defun anx-print-time-intervals (report-meta)
-  (anx-build-time-intervals-list report-meta))
-
 (defun anx-print-dimensions-table ()
-  ;; Array -> IO State!
+  ;; -> IO State!
+  "Prints a table of the report's dimensions in the *scratch* buffer."
   (progn 
-    (anx-print-to-scratch-buffer *anx-dimensions-table-header*)
+    (anx-print-to-scratch-buffer *anx-report-dimensions-table-header*)
     (mapcar (lambda (elem)
 	      (anx-print-to-scratch-buffer (format "| %s | %s | %s | |\n" elem 
 						  (gethash elem *anx-columns-hash*)
@@ -298,14 +283,16 @@ additional fields that need to be defined in their own tables."
 
 (defun anx-print-metrics-table ()
   ;; Array -> IO State!
+  "Prints a table of the report's metrics in the *scratch* buffer."
   (progn
-    (anx-print-to-scratch-buffer *anx-metrics-table-header*)
+    (anx-print-to-scratch-buffer *anx-report-metrics-table-header*)
     (mapcar (lambda (elem)
 	      (anx-print-to-scratch-buffer (format "| %s | %s | | |\n" elem (gethash elem *anx-columns-hash*))))
 	    (anx-build-metrics-list))))
 
 (defun anx-clear-hashes ()
   ;; -> State!
+  "Clear the state hash tables used to generate documentation for Reporting APIs."
   (progn (clrhash *anx-havings-hash*)
 	 (clrhash *anx-columns-hash*)
 	 (clrhash *anx-filters-hash*)))
