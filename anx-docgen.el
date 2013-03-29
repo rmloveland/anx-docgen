@@ -392,32 +392,40 @@ Prints its output to the *scratch* buffer."
 
 ;;; Part 4. Mobile SDK Error Messages
 
-(defvar *anx-sdk-error-table-header*
-  "\n|| Android? || iOS? || Message || Key ||\n")
+(defvar *anx-mobile-sdk-error-table-header*
+  "\n|| Message || Key ||\n"
+  "The format string used for table columns in Mobile SDK error documentation.")
 
-(defvar *anx-new-sdk-error-table-header*
-  "\n|| Message || Key ||\n")
+(defvar *anx-android-sdk-errors* (make-hash-table :test 'equal)
+  "Stores the keys and associated messages that display in Android logs.")
 
-(defvar *anx-android-sdk-errors* (make-hash-table :test 'equal))
-
-(defvar *anx-ios-sdk-errors* (make-hash-table :test 'equal))
+(defvar *anx-ios-sdk-errors* (make-hash-table :test 'equal)
+  "Stores the keys and associated messages that display in iOS logs.")
 
 (defun anx-clear-sdk-error-hashes ()
   ;; -> State!
+  "Cleans up the hash tables used to maintain state when generating Mobile SDK error tables."
   (progn (clrhash *anx-android-sdk-errors*)
 	 (clrhash *anx-ios-sdk-errors*)))
 
 (defun anx-sdk-error:on (error-object)
+  ;; Alist -> Array
+  "Gets the 'on field of ERROR-OBJECT."
   (anx-assoc-val 'on error-object))
 
 (defun anx-sdk-error:message (error-object)
+  ;; Alist -> String
+  "Gets the 'message field of ERROR-OBJECT."
   (anx-assoc-val 'message error-object))
 
 (defun anx-sdk-error:key (error-object)
+  ;; Alist -> String
+  "Gets the 'key field of ERROR-OBJECT."
   (anx-assoc-val 'key error-object))
 
 (defun anx-sdk-error:android-p (error-object)
   ;; Alist -> Boolean
+  "Given ERROR-OBJECT, determine whether it can occur in the Android SDK."
   (let* ((devices (anx-sdk-error:on error-object))
 	 (len (length devices)))
     (if (>= len 1)
@@ -426,16 +434,16 @@ Prints its output to the *scratch* buffer."
 
 (defun anx-sdk-error:ios-p (error-object)
   ;; Alist -> Boolean
+  "Given ERROR-OBJECT, determine whether it can occur in the iOS SDK."
   (let* ((devices (anx-sdk-error:on error-object))
 	 (len (length devices)))
     (if (> len 1)
 	t
       nil)))
 
-;; New version, prints one table for each device.
-
 (defun anx-print-sdk-error-tables (sdk-error-array)
   ;; Array -> IO State!
+  "Given SDK-ERROR-ARRAY, generate documentation tables from it."
   (progn
     ;; First, build hash tables
     (mapcar (lambda (e)
@@ -449,25 +457,25 @@ Prints its output to the *scratch* buffer."
 		    (puthash key message *anx-ios-sdk-errors*))))
 	    sdk-error-array)
     ;; Then, maphash and build each table, starting with iOS
-    (anx-print-to-scratch-buffer (format "\n\nh3. iOS\n\n"))
-    (anx-print-to-scratch-buffer *anx-new-sdk-error-table-header*)
+    (anx-print-to-scratch-buffer (format "\n\nh3. iOS\n"))
+    (anx-print-to-scratch-buffer *anx-mobile-sdk-error-table-header*)
     (maphash (lambda (k v)
 	       (anx-print-to-scratch-buffer (format "| %s | {{%s}} |\n" v k)))
 	     *anx-ios-sdk-errors*)
     ;; Now for Android
-    (anx-print-to-scratch-buffer (format "\n\nh3. Android\n\n"))
-    (anx-print-to-scratch-buffer *anx-new-sdk-error-table-header*)
+    (anx-print-to-scratch-buffer (format "\n\nh3. Android\n"))
+    (anx-print-to-scratch-buffer *anx-mobile-sdk-error-table-header*)
     (maphash (lambda (k v)
 	       (anx-print-to-scratch-buffer (format "| %s | {{%s}} |\n" v k)))
-	     *anx-android-sdk-errors*)))
+	     *anx-android-sdk-errors*)
+    (anx-clear-sdk-error-hashes)))
 
 (defun anx-really-print-sdk-error-tables ()
   ;; -> IO State!
+  "Generates Mobile SDK error documentation from the contents of the current buffer."
   (interactive)
   (let ((sdk-error-array (read (buffer-string))))
     (anx-print-sdk-error-tables sdk-error-array)))
-
-;; anx-docgen.el ends here.
 
 (provide 'anx-docgen)
 
