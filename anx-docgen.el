@@ -400,19 +400,19 @@ Prints its output to the *scratch* buffer."
 	(puthash key (+ 1 curval) table)
       (puthash key 1 table))))
 
-(defun anx-old-hash-incf (key)
-  (anx-hash-incf key *anx-old-fields*))
+(defun anx-old-fields-incf (field)
+  (anx-hash-incf field *anx-old-fields*))
 
-(defun anx-new-hash-incf (key)
-  (anx-hash-incf key *anx-new-fields*))
+(defun anx-new-fields-incf (field)
+  (anx-hash-incf field *anx-new-fields*))
 
-(defun anx-clear-field-name-hashes ()
+(defun anx-clear-fields ()
   ;; -> State!
   (progn
     (clrhash *anx-old-fields*)
     (clrhash *anx-new-fields*)))
 
-(defun anx-extract-field-names-from-buffer (buffer)
+(defun anx-extract-fields (buffer)
   ;; Buffer -> List
   (let ((result nil))
     (save-excursion
@@ -422,31 +422,27 @@ Prints its output to the *scratch* buffer."
 	  (push (match-string-no-properties 1) result))))
     result))
 
-(defun anx-build-field-names-hash (hash buffer)
+(defun anx-build-fields (hash buffer)
   ;; Hash Buffer -> State!
-  (let ((fields (anx-extract-field-names-from-buffer buffer)))
+  (let ((fields (anx-extract-fields buffer)))
     (mapc (lambda (x) (anx-hash-incf x hash))
 	  fields)))
 
-(defun anx-really-extract-old-field-names ()
-  ;; -> State!
-  (interactive)
-  (anx-build-field-names-hash *anx-old-fields*
-			      (current-buffer)))
+(defun anx-build-old-fields (buffer)
+  ;; Buffer -> State!
+  (anx-build-fields *anx-old-fields* buffer))
 
-(defun anx-really-extract-new-field-names ()
-  ;; -> State!
-  (interactive)
-  (anx-build-field-names-hash *anx-new-fields*
-			      (current-buffer)))
+(defun anx-build-new-fields (buffer)
+  ;; Buffer -> State!
+  (anx-build-fields *anx-new-fields* buffer))
 
-(defun anx-delta-field-name-hashes ()
+(defun anx-delta-fields ()
   ;; -> Alist
   (let ((result nil))
     (maphash (lambda (k v)
-	       (if (= (anx-old-hash-incf k) 1)
+	       (if (= (anx-old-fields-incf k) 1)
 		   ;; If 1, key didn't exist in old table, so is new
-		   (push (cons k (- (anx-new-hash-incf k) 1)) result)))
+		   (push (cons k (- (anx-new-fields-incf k) 1)) result)))
 	     *anx-new-fields*)
     result))
 
@@ -457,10 +453,10 @@ Prints its output to the *scratch* buffer."
     (save-excursion
       ;; First, clear old hash contents
       (anx-clear-field-name-hashes)
-      (anx-build-field-names-hash *anx-old-fields* (get-buffer buf1))
-      (anx-build-field-names-hash *anx-new-fields* (get-buffer buf2))
+      (anx-build-new-fields (get-buffer buf1))
+      (anx-build-old-fields (get-buffer buf2))
       (with-current-buffer deltabuf
-	(princ (anx-delta-field-name-hashes) (current-buffer))
+	(princ (anx-delta-fields) (current-buffer))
 	(emacs-lisp-mode)
 	(elisp-format-buffer))
       (switch-to-buffer-other-window deltabuf))))
