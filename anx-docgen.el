@@ -389,31 +389,42 @@ Prints its output to the *scratch* buffer."
 
 ;;; Part 4. Working with existing documentation
 
-(defvar *anx-new-fields* (make-hash-table :test 'equal))
+(defvar *anx-new-fields* (make-hash-table :test 'equal)
+  "A hash table for storing the fields from a fresh call to an API service's /meta.")
 
-(defvar *anx-old-fields* (make-hash-table :test 'equal))
+(defvar *anx-old-fields* (make-hash-table :test 'equal)
+  "A hash table for storing the fields from an existing API service's documentation.")
 
 (defun anx-hash-incf (key table)
   ;; String Hash -> State!
+  "Given a KEY and TABLE, increment the value of KEY.
+If KEY is not numeric (perhaps because it's not defined), give it
+a value of 1."
   (let ((curval (gethash key table)))
     (if (numberp curval)
 	(puthash key (+ 1 curval) table)
       (puthash key 1 table))))
 
 (defun anx-old-fields-incf (field)
+  ;; String -> State!
+  "A convenience function to increment the value of FIELD in `*anx-old-fields*'."
   (anx-hash-incf field *anx-old-fields*))
 
 (defun anx-new-fields-incf (field)
+  ;; String ->State!
+  "A convenience function to increment the value of FIELD in `*anx-new-fields*'."
   (anx-hash-incf field *anx-new-fields*))
 
 (defun anx-clear-fields ()
   ;; -> State!
+  "A convenience function for clearing the state of our fields storage."
   (progn
     (clrhash *anx-old-fields*)
     (clrhash *anx-new-fields*)))
 
 (defun anx-extract-fields (buffer)
   ;; Buffer -> List
+  "Make a list from all of the field names listed in BUFFER."
   (let ((result nil))
     (save-excursion
       (with-current-buffer buffer
@@ -422,22 +433,33 @@ Prints its output to the *scratch* buffer."
 	  (push (match-string-no-properties 1) result))))
     result))
 
-(defun anx-build-fields (hash buffer)
+(defun anx-build-fields (buffer hash)
   ;; Hash Buffer -> State!
+  "Add the fields from BUFFER to HASH."
   (let ((fields (anx-extract-fields buffer)))
     (mapc (lambda (x) (anx-hash-incf x hash))
 	  fields)))
 
 (defun anx-build-old-fields (buffer)
   ;; Buffer -> State!
-  (anx-build-fields *anx-old-fields* buffer))
+  "A convenience function for extracting fields from BUFFER.
+BUFFER should contain the old (which is to say, existing)
+documentation."
+  (anx-build-fields buffer *anx-old-fields*))
 
 (defun anx-build-new-fields (buffer)
   ;; Buffer -> State!
-  (anx-build-fields *anx-new-fields* buffer))
+  "A convenience function for extracting fields from BUFFER.
+BUFFER should contain the new (which is to say, freshly generated)
+tables ready to be filled out with documentation."
+  (anx-build-fields buffer *anx-new-fields*))
 
 (defun anx-delta-fields ()
   ;; -> Alist
+  "Checks the new fields table against the old, returning the delta.
+Returns an alist with elements of the form (FIELD . OCCURRENCES).
+Note that we currently only return a delta if the new table
+contains fields the old one does not (not the other way around)."
   (let ((result nil))
     (maphash (lambda (k v)
 	       (if (= (anx-old-fields-incf k) 1)
@@ -448,6 +470,14 @@ Prints its output to the *scratch* buffer."
 
 (defun anx-delta-buffers (buf1 buf2)
   ;; Buffer Buffer -> IO State!
+  "Check the fields listed in BUF1 against those in BUF2, returning the delta.
+
+The delta is opened in a new buffer, and is only shown if the
+newly generated buffer contains fields the existing documentation
+does not.
+
+BUF1 should contain the existing documentation, and BUF2 the
+freshly generated tables."
   (interactive "bBuffer 1 (Old): \nbBuffer 2 (New): ")
   (let ((deltabuf (generate-new-buffer "*ANX-Docgen Delta*")))
     (save-excursion
