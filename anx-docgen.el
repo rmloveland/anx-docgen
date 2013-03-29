@@ -389,28 +389,28 @@ Prints its output to the *scratch* buffer."
 
 ;;; Part 4. Working with existing documentation
 
-(defvar *anx-new-field-names* (make-hash-table :test 'equal))
+(defvar *anx-new-fields* (make-hash-table :test 'equal))
 
-(defvar *anx-old-field-names* (make-hash-table :test 'equal))
+(defvar *anx-old-fields* (make-hash-table :test 'equal))
 
-(defun anx-hash++ (key table)
+(defun anx-hash-incf (key table)
   ;; String Hash -> State!
   (let ((curval (gethash key table)))
     (if (numberp curval)
 	(puthash key (+ 1 curval) table)
       (puthash key 1 table))))
 
-(defun anx-old-hash++ (key)
-  (anx-hash++ key *anx-old-field-names*))
+(defun anx-old-hash-incf (key)
+  (anx-hash-incf key *anx-old-fields*))
 
-(defun anx-new-hash++ (key)
-  (anx-hash++ key *anx-new-field-names*))
+(defun anx-new-hash-incf (key)
+  (anx-hash-incf key *anx-new-fields*))
 
 (defun anx-clear-field-name-hashes ()
   ;; -> State!
   (progn
-    (clrhash *anx-old-field-names*)
-    (clrhash *anx-new-field-names*)))
+    (clrhash *anx-old-fields*)
+    (clrhash *anx-new-fields*)))
 
 (defun anx-extract-field-names-from-buffer (buffer)
   ;; Buffer -> List
@@ -425,39 +425,40 @@ Prints its output to the *scratch* buffer."
 (defun anx-build-field-names-hash (hash buffer)
   ;; Hash Buffer -> State!
   (let ((fields (anx-extract-field-names-from-buffer buffer)))
-    (mapc (lambda (x) (anx-hash++ x hash))
+    (mapc (lambda (x) (anx-hash-incf x hash))
 	  fields)))
 
 (defun anx-really-extract-old-field-names ()
   ;; -> State!
   (interactive)
-  (anx-build-field-names-hash *anx-old-field-names*
+  (anx-build-field-names-hash *anx-old-fields*
 			      (current-buffer)))
 
 (defun anx-really-extract-new-field-names ()
   ;; -> State!
   (interactive)
-  (anx-build-field-names-hash *anx-new-field-names*
+  (anx-build-field-names-hash *anx-new-fields*
 			      (current-buffer)))
 
 (defun anx-delta-field-name-hashes ()
   ;; -> Alist
   (let ((result nil))
     (maphash (lambda (k v)
-	       (if (= (anx-old-hash++ k) 1)
+	       (if (= (anx-old-hash-incf k) 1)
 		   ;; If 1, key didn't exist in old table, so is new
-		   (push (cons k (- (anx-new-hash++ k) 1)) result)))
-	     *anx-new-field-names*)
+		   (push (cons k (- (anx-new-hash-incf k) 1)) result)))
+	     *anx-new-fields*)
     result))
 
 (defun anx-delta-buffers (buf1 buf2)
+  ;; Buffer Buffer -> IO State!
   (interactive "bBuffer 1 (Old): \nbBuffer 2 (New): ")
   (let ((deltabuf (generate-new-buffer "*ANX-Docgen Delta*")))
     (save-excursion
       ;; First, clear old hash contents
       (anx-clear-field-name-hashes)
-      (anx-build-field-names-hash *anx-old-field-names* (get-buffer buf1))
-      (anx-build-field-names-hash *anx-new-field-names* (get-buffer buf2))
+      (anx-build-field-names-hash *anx-old-fields* (get-buffer buf1))
+      (anx-build-field-names-hash *anx-new-fields* (get-buffer buf2))
       (with-current-buffer deltabuf
 	(princ (anx-delta-field-name-hashes) (current-buffer))
 	(emacs-lisp-mode)
