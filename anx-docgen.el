@@ -1,32 +1,46 @@
-;;; ANX-Docgen  -*- lexical-binding: t -*-
+;;; anx-docgen.el --- A tool for generating structured API documentation.
+;;; -*- lexical-binding: t -*-
 
-(defvar *anx-stack* nil
-  "The stack where we stash our second-pass field definitions.")
+;;; Commentary:
+;;  Note that json.el must be configured to represent JSON objects as
+;;  association lists.
 
-(defun anx-alistp (alist)
+;;; Code:
+
+;; Part 1. Standard API Services
+
+(defvar *anx-json-stack* nil
+  "The stack where we stash our second-level JSON field definitions.")
+
+(defun anx-alistp (object)
   ;; Object -> Boolean
-  "Determine if ALIST is an association list."
-  (and (listp alist)
-       (every #'consp alist)))
+  "Determine if this OBJECT is an association list."
+  (and (listp object)
+       (every #'consp object)))
 
-(defun anx-get-alist-keys (alist)
-  ;; Alist -> List
-  "If ALIST is an association list, return a list of its keys."
-  (if (anx-alistp alist)
+(defun anx-get-alist-keys (object)
+  ;; Object -> List
+  "If OBJECT is an association list, return a list of its keys.
+Otherwise return nil."
+  (if (anx-alistp object)
       (mapcar (lambda (elem)
 		(car elem))
-	      alist)
+	      object)
     nil))
 
-(defun anx-array-of-alistsp (array)
+(defun anx-array-of-alists-p (object)
   ;; Object -> Boolean
-  "Determine if ARRAY is an array of association lists."
-  (and (arrayp array)
-       (anx-alistp (elt array 0))))
+
+  ;; FIXME: Make this check more robust, it's depended on for error
+  ;; checking.
+
+  "Determine if OBJECT is an array of association lists."
+  (and (arrayp object)
+       (anx-alistp (elt object 0))))
 
 (defun anx-assoc-val (key alist)
   ;; Symbol Alist -> Object
-  "Given KEY and ALIST, return the value referenced by KEY.
+  "Given KEY and ALIST, return the value associated with KEY.
 Unlike `assoc', this function does not return the entire
 key-value pair."
   (let ((result (assoc key alist)))
@@ -34,106 +48,113 @@ key-value pair."
 	(cdr result)
       result)))
 
-(defun anx-get-random-alist (array-of-alists)
-  ;; Array of Alists -> Alist
-  "Given an ARRAY-OF-ALISTS, return a random association list."
-  (let* ((len (length array-of-alists))
-	 (rand (random len)))
-    (elt array-of-alists rand)))
-
 (defun anx-stack-push (item)
   ;; Item -> State!
-  "Push ITEM onto the global `*anx-stack*'."
-  (push item *anx-stack*))
+  "Push ITEM onto `*anx-json-stack*'."
+  (push item *anx-json-stack*))
 
 (defun anx-stack-pop ()
-  ;; State!
-  "Pop an item off of the global `*anx-stack*'."
-  (pop *anx-stack*))
+  ;; -> State!
+  "Pop an item off of `*anx-json-stack*'."
+  (pop *anx-json-stack*))
 
-(defun anx-stack-emptyp ()
+(defun anx-stack-empty-p ()
   ;; -> Boolean
-  "Check if the global `*anx-stack*' is empty."
-  (null *anx-stack*))
+  "Check if `*anx-json-stack*' is empty."
+  (null *anx-json-stack*))
 
 (defun anx-clear-stack ()
-  ;; State!
-  "Clear the contents of the global `*anx-stack*'."
-  (progn (setq *anx-stack* nil)))
+  ;; -> State!
+  "Clear the contents of `*anx-json-stack*'."
+  (progn (setq *anx-json-stack* nil)))
 
 (defun anx-translate-boolean (symbol)
   ;; Symbol -> String
-  "Given a SYMBOL with a `false' boolean value in JSON, return ``No''.
-Otherwise, return ``Yes''."
+  "Translate the boolean SYMBOL into something suitable for printing."
   (if (or (equal symbol :json-false)
 	  (null symbol))
       "No"
     "Yes"))
 
-(defun anx-print-object-standard-fields (object)
+(defun anx-format-object-standard-fields (json-object)
   ;; Alist -> IO
-  (let* ((fields (anx-list-object-standard-fields object)))
-    (format *anx-table-row*
+  "Format the fields of JSON-OBJECT for printing using `*anx-standard-table-row*'."
+  (let* ((fields (anx-list-object-standard-fields json-object)))
+    (format *anx-standard-table-row*
 	    (pop fields)
 	    (pop fields)
 	    (pop fields)
 	    (pop fields))))
 
-(defun anx-list-object-standard-fields (object)
+(defun anx-list-object-standard-fields (json-object)
   ;; Alist -> List
+  "Return a list of JSON-OBJECT's fields."
   (list
-   (anx-assoc-val 'name object)
-   (anx-assoc-val 'type object)
-   (anx-translate-boolean (anx-assoc-val 'sort_by object))
-   (anx-translate-boolean (anx-assoc-val 'filter_by object))))
+   (anx-assoc-val 'name json-object)
+   (anx-assoc-val 'type json-object)
+   (anx-translate-boolean (anx-assoc-val 'sort_by json-object))
+   (anx-translate-boolean (anx-assoc-val 'filter_by json-object))))
 
-(defun anx-object-has-fieldsp (object)
+(defun anx-object-has-fields-p (json-object)
   ;; Alist -> Boolean
-  (if (assoc 'fields object)
+  "Determine if JSON-OBJECT has any sub-fields that need their own tables."
+  (if (assoc 'fields json-object)
       t
     nil))
 
-(defun anx-save-fields-for-later (object)
+(defun anx-save-fields-for-later (json-object)
   ;; Alist -> State!
-  (let ((name (anx-assoc-val 'name object)))
-    (anx-stack-push (cons name (anx-assoc-val 'fields object)))))
+  "Given JSON-OBJECT, pushes a (NAME . FIELDS) pair on `*anx-json-stack*'."
+  (let ((name (anx-assoc-val 'name json-object)))
+    (anx-stack-push (cons name (anx-assoc-val 'fields json-object)))))
 
-(defun anx-process-object (object)
+(defun anx-process-object (json-object)
   ;; Alist -> IO State!
+  "Prints the fields from JSON-OBJECT in the *scratch* buffer.
+If JSON-OBJECT has additional nested fields, saves them for
+further processing."
   (progn
     (anx-print-to-scratch-buffer
-     (anx-print-object-standard-fields object))
-    (if (anx-object-has-fieldsp object)
-	(anx-save-fields-for-later object))))
+     (anx-format-object-standard-fields json-object))
+    (if (anx-object-has-fields-p json-object)
+	(anx-save-fields-for-later json-object))))
 
 (defun anx-process-objects (array-of-alists)
   ;; Array -> IO State!
+  "Print a wiki table built from ARRAY-OF-ALISTS to the *scratch* buffer."
   (anx-print-to-scratch-buffer
    (format "\nh4. JSON Fields\n\n"))
   (anx-print-to-scratch-buffer
-   (format *anx-table-header*))
-  (mapc (lambda (object)
-	  (anx-process-object object))
+   (format *anx-standard-table-header*))
+  (mapc (lambda (json-object)
+	  (anx-process-object json-object))
 	array-of-alists))
 
-(defvar *anx-table-header*
-  "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||\n")
+(defvar *anx-standard-table-header*
+  "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||\n"
+  "The format string used for wiki table columns in documentation for standard API services.")
 
-(defvar *anx-table-row*
-  "| %s | %s | %s | %s | | | |\n")
+(defvar *anx-standard-table-row*
+  "| %s | %s | %s | %s | | | |\n"
+  "The format string used for wiki table rows in documentation for standard API services.")
 
 (defun anx-print-to-scratch-buffer (format-string)
+  ;; -> IO
+  "Print FORMAT-STRING to the *scratch* buffer."
   (princ format-string
 	 (get-buffer "*scratch*")))
 
 (defun anx-process-stack-item (list)
   ;; List -> IO State!
-  (let ((array-of-alists (cdr list))
-	(name (capitalize (car list))))
+  "Given a LIST of the form (NAME . FIELDS), print documentation tables.
+These are created when JSON fields in the primary table contain
+additional fields that need to be defined in their own tables."
+  (let ((name (capitalize (car list)))
+	(array-of-alists (cdr list)))
     (anx-print-to-scratch-buffer
      (format "\nh4. %s\n\n" name))
     (anx-print-to-scratch-buffer
-     (format *anx-table-header*))
+     (format *anx-standard-table-header*))
     (mapc (lambda (object)
 	    ;; Nothing should have fields at this level (I hope).
 	    (anx-process-object object))
@@ -141,12 +162,14 @@ Otherwise, return ``Yes''."
 
 (defun anx-process-stack-items ()
   ;; -> IO State!
-  (while (not (anx-stack-emptyp))
+  "Pop items off of `*anx-json-stack*' and process them with `anx-process-stack-item'."
+  (while (not (anx-stack-empty-p))
     (anx-process-stack-item (anx-stack-pop))))
 
 (defun anx-print-meta (array-of-alists)
   ;; Array -> IO State!
-  (if (anx-array-of-alistsp array-of-alists)
+  "Given an ARRAY-OF-ALISTS, print documentation tables from it."
+  (if (anx-array-of-alists-p array-of-alists)
       (progn
 	(anx-clear-stack)
 	(anx-process-objects array-of-alists)
@@ -155,11 +178,13 @@ Otherwise, return ``Yes''."
 
 (defun anx-really-print-meta ()
   ;; -> IO State!
+  "Generate documentation from the contents of the current buffer."
   (interactive)
   (let ((array-of-alists (read (buffer-string))))
     (anx-print-meta array-of-alists)))
 
-;;; Reporting.
+
+;; Part 2. Reporting
 
 (defvar *anx-dimensions-table-header*
   "\n|| Column || Type || Filter? || Description ||\n")
@@ -288,7 +313,7 @@ Otherwise, return ``Yes''."
 	 (clrhash *anx-filters-hash*)))
 
 	 
-;;; Working with existing documentation
+;;; Part 3. Working with existing documentation
 
 (defvar *anx-current-meta-names* (make-hash-table))
 
@@ -379,7 +404,8 @@ Otherwise, return ``Yes''."
   (let ((buf (current-buffer)))
     (anx-print-table-lines buf)))
 
-;;; Mobile Error Messages
+
+;;; Part 4. Mobile SDK Error Messages
 
 (defvar *anx-sdk-error-table-header*
   "\n|| Android? || iOS? || Message || Key ||\n")
@@ -421,26 +447,6 @@ Otherwise, return ``Yes''."
 	t
       nil)))
 
-;; Old version.
-
-(defun anx-print-sdk-error-table (sdk-error-array)
-  ;; Array -> IO State!
-  (progn
-    (anx-print-to-scratch-buffer *anx-sdk-error-table-header*)
-    (mapcar (lambda (e)
-	      (let ((android-p (anx-translate-boolean (anx-sdk-error:android-p e)))
-		    (ios-p (anx-translate-boolean (anx-sdk-error:ios-p e)))
-		    (message (anx-sdk-error:message e))
-		    (key (anx-sdk-error:key e)))
-		(anx-print-to-scratch-buffer (format "| %s | %s | %s | {{%s}} |\n" android-p ios-p message key))))
-	    sdk-error-array)))
-
-(defun anx-really-print-sdk-error-table ()
-  ;; -> IO State!
-  (interactive)
-  (let ((sdk-error-array (read (buffer-string))))
-    (anx-print-sdk-error-table sdk-error-array)))
-
 ;; New version, prints one table for each device.
 
 (defun anx-print-sdk-error-tables (sdk-error-array)
@@ -477,3 +483,7 @@ Otherwise, return ``Yes''."
     (anx-print-sdk-error-tables sdk-error-array)))
 
 ;; anx-docgen.el ends here.
+
+(provide 'anx-docgen)
+
+;;; anx-docgen.el ends here
