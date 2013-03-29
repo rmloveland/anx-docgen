@@ -258,7 +258,7 @@ necessary state."
     (anx-build-havings-hash report-meta-alist)
     (anx-print-dimensions-table)
     (anx-print-metrics-table)
-    (anx-clear-hashes)))
+    (anx-clear-report-hashes)))
 
 (defun anx-really-print-report-meta ()
   ;; -> IO State!
@@ -290,7 +290,7 @@ Prints its output to the *scratch* buffer."
 	      (anx-print-to-scratch-buffer (format "| %s | %s | | |\n" elem (gethash elem *anx-columns-hash*))))
 	    (anx-build-metrics-list))))
 
-(defun anx-clear-hashes ()
+(defun anx-clear-report-hashes ()
   ;; -> State!
   "Clear the state hash tables used to generate documentation for Reporting APIs."
   (progn (clrhash *anx-havings-hash*)
@@ -384,6 +384,68 @@ Prints its output to the *scratch* buffer."
   (interactive)
   (let ((sdk-error-array (read (buffer-string))))
     (anx-print-sdk-error-tables sdk-error-array)))
+
+;;; Part 4. Working with existing documentation
+
+(defvar *anx-new-field-names* (make-hash-table :test 'equal))
+
+(defvar *anx-old-field-names* (make-hash-table :test 'equal))
+
+(defun anx-hash++ (key table)
+  ;; String Hash -> State!
+  (let ((curval (gethash key table)))
+    (if (numberp curval)
+	(puthash key (+ 1 curval) table)
+      (puthash key 1 table))))
+
+(defun anx-old-hash++ (key)
+  (anx-hash++ key *anx-old-field-names*))
+
+(defun anx-new-hash++ (key)
+  (anx-hash++ key *anx-new-field-names*))
+
+(defun anx-clear-field-name-hashes ()
+  ;; -> State!
+  (progn
+    (clrhash *anx-old-field-names*)
+    (clrhash *anx-new-field-names*)))
+
+(defun anx-extract-field-names-from-buffer (buffer)
+  ;; Buffer -> List
+  (let ((result nil))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^| \\([A-Za-z_.]+\\)" nil t)
+	(push (match-string-no-properties 1) result))
+      result)))
+
+(defun anx-build-field-names-hash (hash buffer)
+  ;; Hash Buffer -> State!
+  (let ((fields (anx-extract-field-names-from-buffer buffer)))
+    (mapc (lambda (x) (anx-hash++ x hash))
+	  fields)))
+
+(defun anx-really-extract-old-field-names ()
+  ;; -> State!
+  (interactive)
+  (anx-build-field-names-hash *anx-old-field-names*
+			      (current-buffer)))
+
+(defun anx-really-extract-new-field-names ()
+  ;; -> State!
+  (interactive)
+  (anx-build-field-names-hash *anx-new-field-names*
+			      (current-buffer)))
+
+(defun anx-delta-field-name-hashes ()
+  ;; -> Alist
+  (let ((result nil))
+    (maphash (lambda (k v)
+	       (if (= (anx-old-hash++ k) 1)
+		   ;; If 1, key didn't exist in old table, so is new
+		   (push (cons k (- (anx-new-hash++ k) 1)) result)))
+	     *anx-new-field-names*)
+    result))
 
 (provide 'anx-docgen)
 
