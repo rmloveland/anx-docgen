@@ -7,6 +7,8 @@
 
 ;;; Code:
 
+(require 'elisp-format)
+
 ;; Part 1. Standard API Services
 
 (defvar *anx-json-stack* nil
@@ -414,10 +416,11 @@ Prints its output to the *scratch* buffer."
   ;; Buffer -> List
   (let ((result nil))
     (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^| \\([A-Za-z_.]+\\)" nil t)
-	(push (match-string-no-properties 1) result))
-      result)))
+      (with-current-buffer buffer
+	(goto-char (point-min))
+	(while (re-search-forward "^| \\([A-Za-z_.]+\\)" nil t)
+	  (push (match-string-no-properties 1) result))))
+    result))
 
 (defun anx-build-field-names-hash (hash buffer)
   ;; Hash Buffer -> State!
@@ -446,6 +449,20 @@ Prints its output to the *scratch* buffer."
 		   (push (cons k (- (anx-new-hash++ k) 1)) result)))
 	     *anx-new-field-names*)
     result))
+
+(defun anx-delta-buffers (buf1 buf2)
+  (interactive "bBuffer 1 (Old): \nbBuffer 2 (New): ")
+  (let ((deltabuf (generate-new-buffer "*ANX-Docgen Delta*")))
+    (save-excursion
+      ;; First, clear old hash contents
+      (anx-clear-field-name-hashes)
+      (anx-build-field-names-hash *anx-old-field-names* (get-buffer buf1))
+      (anx-build-field-names-hash *anx-new-field-names* (get-buffer buf2))
+      (with-current-buffer deltabuf
+	(princ (anx-delta-field-name-hashes) (current-buffer))
+	(emacs-lisp-mode)
+	(elisp-format-buffer))
+      (switch-to-buffer-other-window deltabuf))))
 
 (provide 'anx-docgen)
 
