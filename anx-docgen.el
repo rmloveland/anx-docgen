@@ -30,13 +30,11 @@ Otherwise return nil."
 
 (defun anx-array-of-alists-p (object)
   ;; Object -> Boolean
-
-  ;; FIXME: Make this check more robust, it's depended on for error
-  ;; checking.
-
   "Determine if OBJECT is an array of association lists."
   (and (arrayp object)
-       (anx-alistp (elt object 0))))
+       (equalp nil (remove-if (lambda (x) (equalp x t)) 
+			      (mapcar (lambda (x) (anx-alistp x)) 
+				      object)))))
 
 (defun anx-assoc-val (key alist)
   ;; Symbol Alist -> Object
