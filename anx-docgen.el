@@ -468,7 +468,7 @@ contains fields the old one does not (not the other way around)."
 	     *anx-new-fields*)
     result))
 
-(defun anx-delta-buffers (buf1 buf2)
+(defun anx-delta-wiki-buffers (buf1 buf2)
   ;; Buffer Buffer -> IO State!
   "Check the fields listed in BUF1 against those in BUF2, returning the delta.
 
