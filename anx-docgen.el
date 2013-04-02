@@ -390,7 +390,7 @@ Prints its output to the *scratch* buffer."
 ;;; Part 4. Working with existing documentation
 
 (defvar *anx-new-fields* (make-hash-table :test 'equal)
-  "A hash table for storing the fields from a fresh call to an API service's /meta.")
+  "A hash table for storing the fields from a freshly generated API service document.")
 
 (defvar *anx-old-fields* (make-hash-table :test 'equal)
   "A hash table for storing the fields from an existing API service's documentation.")
