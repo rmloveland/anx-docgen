@@ -1,45 +1,131 @@
-#+title: Notes
+#+title: Notes on ANX-Docgen
 
-* New formats needed
+* New Intermediate Representation Needed
 
-  Better idea: let's get the documents themselves into Lisp as an
+  Instead of focusing on Confluence's current formatting preferences
+  as our (moving) target, let's get the documents into Lisp as an
   intermediate data format. From there we can transform to whatever we
-  need.
+  need. Below are some proposed data formats for working with both
+  regular APIs and reports. (These may not be general enough yet.)
+
+  Before we are able to come up with a good proposal for an
+  intermediate representation, we need to specify our document
+  structure more precisely.
+
+  (See [[Proposed New Document Structure]].)
+
+* Proposed New Document Structure
 
 ** Standard Services
 
-   "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||"
-   '("Name" "Type" "Sort By?" "Filter By?" "Description" "Default" "Required On")
+   The easiest thing to do is to work with a slightly modified version
+   of our existing document structure. It will look like this:
 
-   "| inventory_attributes | array of objects | No | No | | | |"
-   '((inventory_attributes . '((type . "array of objects")
-        (sort_by . nil)
-	(filter_by . nil)
-	(description . "")
-	(default . "")
-	(required_on . "")))
-     (...))
+  |---------------------------------|
+  | Title                           |
+  |---------------------------------|
+  | Introduction                    |
+  |---------------------------------|
+  | Table of Contents               |
+  |---------------------------------|
+  | REST API                        |
+  |---------------------------------|
+  | JSON Fields (Parent Table)      |
+  |---------------------------------|
+  | More JSON Fields (Child Tables) |
+  |---------------------------------|
+  | Usage Examples                  |
+  |---------------------------------|
+  | Related Topics                  |
+  |---------------------------------|
 
-** Report Service
 
-*** Dimensions
+   Translated to Lisp, it could look like this:
 
-    "|| Column || Type || Filter? || Description ||"
-    '("Column"  "Type"  "Filter?"  "Description")
+  #+begin_src emacs-lisp
+    '(title .
+            (introduction . (text . "Text goes here."))
+            (table-of-contents . code-to-insert-confluence-toc-macro-goes-here)
+            (rest-api . ((create . ("example 1" "example 2") ("note 1" "note 2"))
+                         (read . ("example") ("note"))
+                         (update . ("example") ("note"))
+                         (delete . ("example") ("note"))))
+            (json-fields .
+                         (header . ("Name" "Type" "Sort By?" "Filter By?" "Description" "Default" "Required On"))
+                         (id . ("id" "int" "Yes" "Yes" "The ID of the thing." "" "PUT"))
+                         (name . ("name" "string" "Yes" "Yes" "The name of the thing" "" "POST")))
+            ;; etc.
+            (pixels .
+                    (header . ("Name" "Type" "Description"))
+                    (id . ("id" "int" "The ID of the pixel."))
+                    (name . ("name" "string" "The name of the pixel.")))
+            ;; etc.
+            (examples . 
+                      (create . (("example title"
+                                  "example description"
+                                  "example code")))
+                      (read . (("example title"
+                                "example description"
+                                "example code")))
+                      (update . (("example title"
+                                  "example description"
+                                  "example code")))
+                      (delete . (("example title"
+                                  "example description"
+                                  "example code"))))
+            (related-topics .
+                            ("topic 1"
+                             "topic 2"
+                             "topic 3")))
+  #+end_src
+  
+** Report Services
 
-    "| month | date | Yes | |"
-    '((month . '((type . "date")
-                 (filter_by . t)
-		 (description . "")))
-      (...))
+   The document below is represented as an alist, which has some nice
+   properties. For example, we can query any section of the document
+   programmatically and read or modify its contents.
 
-*** Metrics
+   #+begin_src emacs-lisp
+     '((title "title")
+       (introduction
+        (text "Intro text"))
+       (table-of-contents code-to-insert-confluence-toc-macro-goes-here)
+       (dimensions
+        (header
+         ("Column" "Type" "Filter?" "Description"))
+        (items
+         (advertiser
+          ("advertiser" "string" "Yes" "The name and ID of the advertiser"))
+         (publisher
+          ("publisher" "string" "Yes" "The name and ID of the publisher"))))
+       (metrics
+        (header
+         ("Column" "Type" "Formula" "Description"))
+        (items
+         (imps
+          ("imps" "int" "imps" "The number of impressions"))
+         (clicks
+          ("clicks" "int" "clicks" "The number of clicks"))))
+       (example
+        (create-request-file
+         ("title" "intro text" "example code"))
+        (post-request
+         ("title" "intro text" "example code"))
+        (check-request-status
+         ("title" "intro text" "example code"))
+        (download-data
+         ("title" "intro text" "example code"))))
+     
+   #+end_src
 
-    "|| Column || Type || Formula || Description ||"
-    '("Column"  "Type"  "Formula"  "Description")
+* Ongoing Manual Translation Process
+* Things To Do
 
-    "| imps | int | | |"
-    '((imps . (type . int)
-              (formula . "")
-	      (description . ""))
-      (...))
+** TODO Look into esxml
+
+   Rather than reinvent the wheel with your own format, research
+   whether output from esxml will suffice.
+
+** TODO Rewrite intermediate Lisp representation for standard reports as an alist
+
+   See [[Report Services]].
