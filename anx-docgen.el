@@ -1,9 +1,20 @@
 ;;; anx-docgen.el --- A tool for generating structured API documentation.
 ;;; -*- lexical-binding: t -*-
 
+;; Copyright (C) 2013 Rich Loveland
+
+;; Author: Rich Loveland
+;; Version: 0.1
+;; Keywords: convenience, JSON, REST, API, Documentation
+
+;; This file is NOT part of GNU Emacs.
+
+;; This code is written by Richard M. Loveland and placed in the
+;; Public Domain. All warranties are disclaimed.
+
 ;;; Commentary:
-;;  Note that json.el must be configured to represent JSON objects as
-;;  association lists.
+;;  In order for this to work, json.el must be configured to represent
+;;  JSON objects as association lists.
 
 ;;; Code:
 
