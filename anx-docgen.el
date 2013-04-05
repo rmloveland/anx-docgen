@@ -166,10 +166,10 @@ that need to be defined in their own tables."
 (defun anx-process-objects (array-of-alists)
   ;; Array -> IO State!
   "Given ARRAY-OF-ALISTS, ..."
-  (cons 'items
-	(mapcar (lambda (json-object)
-		  (anx-process-object json-object))
-		array-of-alists)))
+  (list (cons 'items
+	      (mapcar (lambda (json-object)
+			(anx-process-object json-object))
+		      array-of-alists))))
 
 (defvar *anx-standard-table-header*
   '("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")
