@@ -124,14 +124,13 @@ that need to be defined in their own tables."
   (let* ((lc-name (car list))
 	 (uc-name (capitalize lc-name))
 	 (array-of-alists (cdr list)))
-    (cons 'title
-	  (cons
-	   (list 'text uc-name)
-	   (list (cons 'items
-		       (mapcar (lambda (object)
-				 ;; Nothing should have fields at this level (I hope).
-				 (anx-alistify-object object))
-			       array-of-alists)))))))
+    (cons (list 'title
+		(list 'text uc-name))
+	  (list (cons 'items
+		      (mapcar (lambda (object)
+				;; Nothing should have fields at this level (I hope).
+				(anx-alistify-object object))
+			      array-of-alists))))))
 
 (defun anx-process-stack-items ()
   ;; -> IO State!
