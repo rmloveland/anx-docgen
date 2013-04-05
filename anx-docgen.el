@@ -124,14 +124,16 @@ that need to be defined in their own tables."
   (let* ((lc-name (car list))
 	 (uc-name (capitalize lc-name))
 	 (array-of-alists (cdr list)))
-    (list (list 'title
-		(list 'text uc-name))
-	  (list 'header *anx-standard-table-header*)
-	  (list (cons 'items
-		      (mapcar (lambda (object)
-				;; Nothing should have fields at this level (I hope).
-				(anx-alistify-object object))
-			      array-of-alists))))))
+    (list
+     (list 'title
+	   (list 'text uc-name))
+     (list 'header
+	   *anx-standard-table-header*))
+    (cons 'items
+	  (mapcar (lambda (object)
+		    ;; Nothing should have fields at this level (I hope).
+		    (anx-alistify-object object))
+		  array-of-alists))))
 
 (defun anx-process-stack-items ()
   ;; -> IO State!
@@ -166,7 +168,12 @@ that need to be defined in their own tables."
 (defun anx-process-objects (array-of-alists)
   ;; Array -> IO State!
   "Given ARRAY-OF-ALISTS, ..."
-  (list (cons 'items
+  (list 
+   (list 'title
+	 (list 'text "JSON Fields"))
+   (list 'header
+	 *anx-standard-table-header*)
+   (cons 'items
 	      (mapcar (lambda (json-object)
 			(anx-process-object json-object))
 		      array-of-alists))))
