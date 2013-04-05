@@ -124,8 +124,9 @@ that need to be defined in their own tables."
   (let* ((lc-name (car list))
 	 (uc-name (capitalize lc-name))
 	 (array-of-alists (cdr list)))
-    (cons (list 'title
+    (list (list 'title
 		(list 'text uc-name))
+	  (list 'header *anx-standard-table-header*)
 	  (list (cons 'items
 		      (mapcar (lambda (object)
 				;; Nothing should have fields at this level (I hope).
