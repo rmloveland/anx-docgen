@@ -1,131 +1,129 @@
 #+title: Notes on ANX-Docgen
+#+author: Rich Loveland
+#+email: loveland.richard@gmail.com
 
-* New Intermediate Representation Needed
+* A New Intermediate Representation is Needed
 
   Instead of focusing on Confluence's current formatting preferences
-  as our (moving) target, let's get the documents into Lisp as an
-  intermediate data format. From there we can transform to whatever we
-  need. Below are some proposed data formats for working with both
-  regular APIs and reports. (These may not be general enough yet.)
+  as our (moving) target, we propose to get our documentation tables
+  into Lisp as an intermediate representation. From there we can
+  transform it to whatever we need. Below are some proposed data
+  representations for working with both regular APIs and reports.
 
-  Before we are able to come up with a good proposal for an
-  intermediate representation, we need to specify our document
-  structure more precisely.
+* The Proposed New Document Structure
 
-  (See [[Proposed New Document Structure]].)
-
-* Proposed New Document Structure
+  The document below is represented as an alist, which has some nice
+  properties. For example, we can query any section of the document
+  programmatically and read or modify its contents.
 
 ** Standard Services
 
-   The easiest thing to do is to work with a slightly modified version
-   of our existing document structure. It will look like this:
+  | JSON Fields (Parent Table)                |
+  |-------------------------------------------|
+  | More JSON Fields (Child Tables)           |
+  |-------------------------------------------|
+  | Even more JSON Fields (Grandchild Tables) |
 
-  |---------------------------------|
-  | Title                           |
-  |---------------------------------|
-  | Introduction                    |
-  |---------------------------------|
-  | Table of Contents               |
-  |---------------------------------|
-  | REST API                        |
-  |---------------------------------|
-  | JSON Fields (Parent Table)      |
-  |---------------------------------|
-  | More JSON Fields (Child Tables) |
-  |---------------------------------|
-  | Usage Examples                  |
-  |---------------------------------|
-  | Related Topics                  |
-  |---------------------------------|
-
-
-   Translated to Lisp, it could look like this:
-
-  #+begin_src emacs-lisp
-    '(title .
-            (introduction . (text . "Text goes here."))
-            (table-of-contents . code-to-insert-confluence-toc-macro-goes-here)
-            (rest-api . ((create . ("example 1" "example 2") ("note 1" "note 2"))
-                         (read . ("example") ("note"))
-                         (update . ("example") ("note"))
-                         (delete . ("example") ("note"))))
-            (json-fields .
-                         (header . ("Name" "Type" "Sort By?" "Filter By?" "Description" "Default" "Required On"))
-                         (id . ("id" "int" "Yes" "Yes" "The ID of the thing." "" "PUT"))
-                         (name . ("name" "string" "Yes" "Yes" "The name of the thing" "" "POST")))
-            ;; etc.
-            (pixels .
-                    (header . ("Name" "Type" "Description"))
-                    (id . ("id" "int" "The ID of the pixel."))
-                    (name . ("name" "string" "The name of the pixel.")))
-            ;; etc.
-            (examples . 
-                      (create . (("example title"
-                                  "example description"
-                                  "example code")))
-                      (read . (("example title"
-                                "example description"
-                                "example code")))
-                      (update . (("example title"
-                                  "example description"
-                                  "example code")))
-                      (delete . (("example title"
-                                  "example description"
-                                  "example code"))))
-            (related-topics .
-                            ("topic 1"
-                             "topic 2"
-                             "topic 3")))
-  #+end_src
+   #+begin_src emacs-lisp
+     '((json-fields
+        (title
+         (text "JSON Fields"))
+        (header
+         ("Field" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on"))
+        (items
+         (advertiser
+          (field "advertiser") 
+          (type "string")
+          (sort_by "Yes")
+          (filter_by "Yes")
+          (description "The name and ID of the advertiser")
+          (default "")
+          (required_on ""))
+         (publisher
+          (field "publisher") 
+          (type "string")
+          (sort_by "Yes")
+          (filter_by "Yes")
+          (description "The name and ID of the publisher")
+          (default "")
+          (required_on ""))))
+       (contract
+        (title
+         (text "Contract"))
+        (header
+         ("Field" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on"))
+        (items
+         (id
+          (field "id")
+          (type "int")
+          (sort_by "Yes")
+          (filter_by "Yes")
+          (description "")
+          (default "")
+          (required_on ""))
+         (status
+          (field "status")
+          (type "string")
+          (sort_by "Yes")
+          (filter_by "Yes")
+          (description "")
+          (default "")
+          (required_on "")))))
+   #+end_src
   
 ** Report Services
 
-   The document below is represented as an alist, which has some nice
-   properties. For example, we can query any section of the document
-   programmatically and read or modify its contents.
+  | Dimensions |
+  |------------|
+  | Metrics    |
 
    #+begin_src emacs-lisp
-     '((title "title")
-       (introduction
-        (text "Intro text"))
-       (table-of-contents code-to-insert-confluence-toc-macro-goes-here)
-       (dimensions
-        (header
-         ("Column" "Type" "Filter?" "Description"))
-        (items
-         (advertiser
-          ("advertiser" "string" "Yes" "The name and ID of the advertiser"))
-         (publisher
-          ("publisher" "string" "Yes" "The name and ID of the publisher"))))
+     '((dimensions
+       (title
+        (text "Dimensions"))
+       (header
+        ("Column" "Type" "Group?" "Filter?" "Description"))
+       (items
+        (advertiser
+         (column "advertiser") 
+         (type "string")
+         (group_by "Yes")
+         (filter_by "Yes")
+         (description "The name and ID of the advertiser"))
+        (publisher
+         (column "publisher") 
+         (type "string")
+         (group_by "Yes")
+         (filter_by "Yes")
+         (description "The name and ID of the publisher"))))
        (metrics
+        (title
+         (text "Metrics"))
         (header
          ("Column" "Type" "Formula" "Description"))
         (items
          (imps
-          ("imps" "int" "imps" "The number of impressions"))
+          (column "imps")
+          (type "int")
+          (formula "imps")
+          (description "The number of impressions"))
          (clicks
-          ("clicks" "int" "clicks" "The number of clicks"))))
-       (example
-        (create-request-file
-         ("title" "intro text" "example code"))
-        (post-request
-         ("title" "intro text" "example code"))
-        (check-request-status
-         ("title" "intro text" "example code"))
-        (download-data
-         ("title" "intro text" "example code"))))
+          (column "clicks")
+          (type "int")
+          (formula "clicks")
+          (description "The number of clicks")))))
      
    #+end_src
 
-* Ongoing Manual Translation Process
 * Things To Do
+
+** TODO Modify anx-docgen.el to output Lisp
 
 ** TODO Look into esxml
 
    Rather than reinvent the wheel with your own format, research
    whether output from esxml will suffice.
 
-** TODO Rewrite intermediate Lisp representation for standard reports as an alist
+** DONE Rewrite intermediate Lisp representation for standard reports as an alist
 
    See [[Report Services]].
