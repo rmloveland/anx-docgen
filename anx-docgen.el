@@ -97,21 +97,56 @@ key-value pair."
 	    (pop fields)
 	    (pop fields))))
 
-(defun anx-list-object-standard-fields (json-object)
-  ;; Alist -> List
-  "Return a list of JSON-OBJECT's fields."
+(defun anx-alistify-object (json-object)
+  ;; Alist -> Alist
+  "Given JSON-OBJECT (an alist), return an alist using our preferred intermediate representation."
   (list
-   (anx-assoc-val 'name json-object)
-   (anx-assoc-val 'type json-object)
-   (anx-translate-boolean (anx-assoc-val 'sort_by json-object))
-   (anx-translate-boolean (anx-assoc-val 'filter_by json-object))))
+   (cons 'name (anx-assoc-val 'name json-object))
+   (cons 'type (anx-assoc-val 'type json-object))
+   (cons 'sort_by (anx-translate-boolean (anx-assoc-val 'sort_by json-object)))
+   (cons 'filter_by (anx-translate-boolean (anx-assoc-val 'filter_by json-object)))
+   (cons 'description "")
+   (cons 'default "")
+   (cons 'required_on "")))
+
+(defun anx-alistify-objects (array-of-alists)
+  ;; Array -> Alist
+  "Given an ARRAY-OF-ALISTS, build an alist using our intermediate representation."
+  (mapcar (lambda (json-object)
+	    (anx-alistify-object json-object))
+	  array-of-alists))
+
+(defun anx-process-stack-item (list)
+  ;; List -> IO State!
+  "Given a LIST of the form (NAME . ARRAY-OF-ALISTS), return our intermediate representation.
+These are created when top-level JSON fields contain child fields
+that need to be defined in their own tables."
+  (let* ((lc-name (car list))
+	 (uc-name (capitalize lc-name))
+	 (array-of-alists (cdr list)))
+    (cons 'title
+	  (cons
+	   (list 'text uc-name)
+	   (list (cons 'items
+		       (mapcar (lambda (object)
+				 ;; Nothing should have fields at this level (I hope).
+				 (anx-alistify-object object))
+			       array-of-alists)))))))
+
+(defun anx-process-stack-items ()
+  ;; -> IO State!
+  "Pop items off of `*anx-json-stack*' and process them with `anx-process-stack-item'."
+  (let ((result nil))
+    (while (not (anx-stack-empty-p))
+      (push (anx-process-stack-item (anx-stack-pop)) result))
+    result))
 
 (defun anx-object-has-fields-p (json-object)
   ;; Alist -> Boolean
   "Determine if JSON-OBJECT has any sub-fields that need their own tables."
-  (if (assoc 'fields json-object)
+  (if (anx-assoc-val 'fields json-object)
       t
-    nil))
+      nil))
 
 (defun anx-save-fields-for-later (json-object)
   ;; Alist -> State!
@@ -120,29 +155,24 @@ key-value pair."
     (anx-stack-push (cons name (anx-assoc-val 'fields json-object)))))
 
 (defun anx-process-object (json-object)
-  ;; Alist -> IO State!
-  "Prints the fields from JSON-OBJECT in the *scratch* buffer.
-If JSON-OBJECT has additional nested fields, saves them for
-further processing."
+  ;; Alist -> Alist State!
+  "Given JSON-OBJECT, we alistify it and stash any child fields on the stack."
   (progn
-    (anx-print-to-scratch-buffer
-     (anx-format-object-standard-fields json-object))
     (if (anx-object-has-fields-p json-object)
-	(anx-save-fields-for-later json-object))))
+	(anx-save-fields-for-later json-object)
+      nil)
+    (anx-alistify-object json-object)))
 
 (defun anx-process-objects (array-of-alists)
   ;; Array -> IO State!
-  "Print a wiki table built from ARRAY-OF-ALISTS to the *scratch* buffer."
-  (anx-print-to-scratch-buffer
-   (format "\nh4. JSON Fields\n\n"))
-  (anx-print-to-scratch-buffer
-   (format *anx-standard-table-header*))
-  (mapc (lambda (json-object)
-	  (anx-process-object json-object))
-	array-of-alists))
+  "Given ARRAY-OF-ALISTS, ..."
+  (cons 'items
+	(mapcar (lambda (json-object)
+		  (anx-process-object json-object))
+		array-of-alists)))
 
 (defvar *anx-standard-table-header*
-  "|| Name || Type || Sort By? || Filter By? || Description || Default || Required On ||\n"
+  '("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")
   "The format string used for wiki table columns in documentation for standard API services.")
 
 (defvar *anx-standard-table-row*
@@ -154,28 +184,6 @@ further processing."
   "Print FORMAT-STRING to the *scratch* buffer."
   (princ format-string
 	 (get-buffer "*scratch*")))
-
-(defun anx-process-stack-item (list)
-  ;; List -> IO State!
-  "Given a LIST of the form (NAME . FIELDS), print documentation tables.
-These are created when JSON fields in the primary table contain
-additional fields that need to be defined in their own tables."
-  (let ((name (capitalize (car list)))
-	(array-of-alists (cdr list)))
-    (anx-print-to-scratch-buffer
-     (format "\nh4. %s\n\n" name))
-    (anx-print-to-scratch-buffer
-     (format *anx-standard-table-header*))
-    (mapc (lambda (object)
-	    ;; Nothing should have fields at this level (I hope).
-	    (anx-process-object object))
-	  array-of-alists)))
-
-(defun anx-process-stack-items ()
-  ;; -> IO State!
-  "Pop items off of `*anx-json-stack*' and process them with `anx-process-stack-item'."
-  (while (not (anx-stack-empty-p))
-    (anx-process-stack-item (anx-stack-pop))))
 
 (defun anx-print-meta (array-of-alists)
   ;; Array -> IO State!
