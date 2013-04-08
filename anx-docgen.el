@@ -210,6 +210,11 @@ that need to be defined in their own tables."
 	 (bufname (concat (buffer-name) " [INTERMEDIATE REPRESENTATION]")))
     (anx-pop-up-buffer bufname result 'emacs-lisp-mode)))
 
+(defun anx-parent:title (document)
+  ;; Alist -> String
+  "Given a Lisp DOCUMENT, return the title of the parent table."
+  (car (anx-assoc-val 'text (anx-assoc-val 'title (car (anx-assoc-val 'parent document))))))
+
 (defun anx-print-meta (array-of-alists)
   ;; Array -> IO State!
   "Given an ARRAY-OF-ALISTS, print documentation tables from it."
