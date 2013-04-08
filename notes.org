@@ -126,13 +126,15 @@
 
 * Things To Do
 
-** TODO Modify anx-docgen.el to output Lisp
+** TODO Modify anx-docgen.el to output a Lispy representation
+
+** TODO Get everything under the 80-char limit!
 
 ** TODO Look into esxml
 
    Rather than reinvent the wheel with your own format, research
    whether output from esxml will suffice.
 
-** DONE Rewrite intermediate Lisp representation for standard reports as an alist
+** DONE Rewrite Lisp representation for standard reports as an alist
 
    See [[Report Services]].
