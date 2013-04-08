@@ -127,13 +127,13 @@ that need to be defined in their own tables."
     (list
      (list 'title
 	   (list 'text uc-name))
-     (list 'header
-	   *anx-standard-table-header*))
-    (cons 'items
-	  (mapcar (lambda (object)
-		    ;; Nothing should have fields at this level (I hope).
-		    (anx-alistify-object object))
-		  array-of-alists))))
+     (list 'columns
+	   *anx-standard-table-header*)
+     (cons 'rows
+	   (mapcar (lambda (object)
+		     ;; Nothing should have fields at this level (I hope).
+		     (anx-alistify-object object))
+		   array-of-alists)))))
 
 (defun anx-process-stack-items ()
   ;; -> IO State!
@@ -171,9 +171,9 @@ that need to be defined in their own tables."
   (list 
    (list 'title
 	 (list 'text "JSON Fields"))
-   (list 'header
+   (list 'columns
 	 *anx-standard-table-header*)
-   (cons 'items
+   (cons 'rows
 	      (mapcar (lambda (json-object)
 			(anx-process-object json-object))
 		      array-of-alists))))
@@ -191,6 +191,24 @@ that need to be defined in their own tables."
   "Print FORMAT-STRING to the *scratch* buffer."
   (princ format-string
 	 (get-buffer "*scratch*")))
+
+(defun anx-process-meta (array-of-alists)
+  ;; Array -> Alist State!
+  "Given an ARRAY-OF-ALISTS, return an alist representing the documentation tables."
+  (let ((parent (anx-process-objects array-of-alists))
+	(children (anx-process-stack-items)))
+    (anx-clear-stack)
+    (list (list 'parent parent) 
+	  (list 'children children))))
+
+(defun anx-really-process-meta ()
+  ;; -> IO State!
+  "Convert the current buffer's contents to a generic Lisp representation."
+  (interactive)
+  (let* ((array-of-alists (read (buffer-string)))
+	 (result (anx-process-meta array-of-alists))
+	 (bufname (concat (buffer-name) " [INTERMEDIATE REPRESENTATION]")))
+    (anx-pop-up-buffer  result 'emacs-lisp-mode)))
 
 (defun anx-print-meta (array-of-alists)
   ;; Array -> IO State!
