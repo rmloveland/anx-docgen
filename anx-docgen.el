@@ -18,8 +18,6 @@
 
 ;;; Code:
 
-(require 'elisp-format)
-
 ;; Part 1. Standard API Services
 
 (defvar *anx-json-stack* nil
