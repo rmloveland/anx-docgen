@@ -18,6 +18,8 @@
 
 ;;; Code:
 
+(require 'appnexus)
+
 ;; Part 1. Standard API Services
 
 (defvar *anx-json-stack* nil
