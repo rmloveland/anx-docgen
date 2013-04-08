@@ -208,7 +208,7 @@ that need to be defined in their own tables."
   (let* ((array-of-alists (read (buffer-string)))
 	 (result (anx-process-meta array-of-alists))
 	 (bufname (concat (buffer-name) " [INTERMEDIATE REPRESENTATION]")))
-    (anx-pop-up-buffer  result 'emacs-lisp-mode)))
+    (anx-pop-up-buffer bufname result 'emacs-lisp-mode)))
 
 (defun anx-print-meta (array-of-alists)
   ;; Array -> IO State!
