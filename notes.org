@@ -25,50 +25,59 @@
   | Even more JSON Fields (Grandchild Tables) |
 
    #+begin_src emacs-lisp
-     '((json-fields
-        (title
-         (text "JSON Fields"))
-        (header
-         ("Field" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on"))
-        (items
-         (advertiser
-          (field "advertiser") 
-          (type "string")
-          (sort_by "Yes")
-          (filter_by "Yes")
-          (description "The name and ID of the advertiser")
-          (default "")
-          (required_on ""))
-         (publisher
-          (field "publisher") 
-          (type "string")
-          (sort_by "Yes")
-          (filter_by "Yes")
-          (description "The name and ID of the publisher")
-          (default "")
-          (required_on ""))))
-       (contract
-        (title
-         (text "Contract"))
-        (header
-         ("Field" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on"))
-        (items
-         (id
-          (field "id")
-          (type "int")
-          (sort_by "Yes")
-          (filter_by "Yes")
-          (description "")
-          (default "")
-          (required_on ""))
-         (status
-          (field "status")
-          (type "string")
-          (sort_by "Yes")
-          (filter_by "Yes")
-          (description "")
-          (default "")
-          (required_on "")))))
+     ((parent ((title (text "JSON Fields")) 
+               (header ("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")) 
+               (items ((name . "inventory_attributes") 
+                       (type . "array of objects") 
+                       (sort_by . "No") 
+                       (filter_by . "No") 
+                       (description . "") 
+                       (default . "") 
+                       (required_on . "")) 
+                      ((name . "supported_media_types") 
+                       (type . "array of objects") 
+                       (sort_by . "No") 
+                       (filter_by . "No") 
+                       (description . "") 
+                       (default . "") 
+                       (required_on . "")) 
+                      ;; etc.
+                      )))
+      (children (((title (text "Inventory_Attributes")) 
+                  (header ("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")) 
+                  (items ((name . "id") 
+                          (type . "int") 
+                          (sort_by . "No") 
+                          (filter_by . "No") 
+                          (description . "") 
+                          (default . "") 
+                          (required_on . "")) 
+                         ((name . "name") 
+                          (type . "string") 
+                          (sort_by . "No") 
+                          (filter_by . "No") 
+                          (description . "") 
+                          (default . "") 
+                          (required_on . "")))) 
+                 ((title (text "Supported_Media_Types")) 
+                  (header ("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")) 
+                  (items ((name . "id") 
+                          (type . "int") 
+                          (sort_by . "No") 
+                          (filter_by . "No") 
+                          (description . "") 
+                          (default . "") 
+                          (required_on . "")) 
+                         ((name . "name") 
+                          (type . "string") 
+                          (sort_by . "No") 
+                          (filter_by . "No") 
+                          (description . "") 
+                          (default . "") 
+                          (required_on . ""))))
+                 ;; etc.
+                 )))
+     
    #+end_src
   
 ** Report Services
