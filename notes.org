@@ -16,7 +16,7 @@
   properties. For example, we can query any section of the document
   programmatically and read or modify its contents.
 
-** Standard Services
+** Standard APIs
 
   | JSON Fields (Parent Table)                |
   |-------------------------------------------|
@@ -80,7 +80,7 @@
      
    #+end_src
   
-** Report Services
+** The Report Service
 
   | Dimensions |
   |------------|
@@ -89,41 +89,52 @@
    #+begin_src emacs-lisp
      '((dimensions
        (title
-        (text "Dimensions"))
+       	(text "Dimensions"))
        (header
-        ("Column" "Type" "Group?" "Filter?" "Description"))
+       	("Column" "Type" "Group?" "Filter?" "Description"))
        (items
-        (advertiser
-         (column "advertiser") 
-         (type "string")
-         (group_by "Yes")
-         (filter_by "Yes")
-         (description "The name and ID of the advertiser"))
-        (publisher
-         (column "publisher") 
-         (type "string")
-         (group_by "Yes")
-         (filter_by "Yes")
-         (description "The name and ID of the publisher"))))
+       	(advertiser
+	 (column "advertiser") 
+	 (type "string")
+	 (group_by "Yes")
+	 (filter_by "Yes")
+	 (description "The name and ID of the advertiser"))
+       	(publisher
+	 (column "publisher") 
+	 (type "string")
+	 (group_by "Yes")
+	 (filter_by "Yes")
+	 (description "The name and ID of the publisher"))))
        (metrics
-        (title
-         (text "Metrics"))
-        (header
-         ("Column" "Type" "Formula" "Description"))
-        (items
-         (imps
-          (column "imps")
-          (type "int")
-          (formula "imps")
-          (description "The number of impressions"))
-         (clicks
-          (column "clicks")
-          (type "int")
-          (formula "clicks")
-          (description "The number of clicks")))))
+       	(title
+	 (text "Metrics"))
+       	(header
+	 ("Column" "Type" "Formula" "Description"))
+       	(items
+	 (imps
+	  (column "imps")
+	  (type "int")
+	  (formula "imps")
+	  (description "The number of impressions"))
+	 (clicks
+	  (column "clicks")
+	  (type "int")
+	  (formula "clicks")
+	  (description "The number of clicks")))))
      
    #+end_src
 
+* How to Print It
+
+** Standard APIs
+
+   At the outermost level we have a `parent' and its `children'. We
+   begin with the parent.
+
+   The parent is an alist that has only one title, one set of columns,
+   and a list of rows. It should be a simple matter to print them each
+   in order.
+   
 * Things To Do
 
 ** TODO Modify anx-docgen.el to output a Lispy representation
