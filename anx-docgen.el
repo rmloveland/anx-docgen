@@ -45,8 +45,8 @@ Otherwise return nil."
   ;; Object -> Boolean
   "Determine if OBJECT is an array of association lists."
   (and (arrayp object)
-       (equalp nil (remove-if (lambda (x) (equalp x t)) 
-			      (mapcar (lambda (x) (anx-alistp x)) 
+       (equalp nil (remove-if (lambda (x) (equalp x t))
+			      (mapcar (lambda (x) (anx-alistp x))
 				      object)))))
 
 (defun anx-assoc-val (key alist)
@@ -118,8 +118,8 @@ key-value pair."
 
 (defun anx-process-stack-item (list)
   ;; List -> IO State!
-  "Given a LIST of the form (NAME . ARRAY-OF-ALISTS), return our intermediate representation.
-These are created when top-level JSON fields contain child fields
+  "Given a LIST, return an intermediate Lisp representation of the document.
+These are created when some JSON fields contain child fields
 that need to be defined in their own tables."
   (let* ((lc-name (car list))
 	 (uc-name (capitalize lc-name))
@@ -168,7 +168,7 @@ that need to be defined in their own tables."
 (defun anx-process-objects (array-of-alists)
   ;; Array -> IO State!
   "Given ARRAY-OF-ALISTS, ..."
-  (list 
+  (list
    (list 'title
 	 (list 'text "JSON Fields"))
    (list 'columns
@@ -198,7 +198,7 @@ that need to be defined in their own tables."
   (let ((parent (anx-process-objects array-of-alists))
 	(children (anx-process-stack-items)))
     (anx-clear-stack)
-    (list (list 'parent parent) 
+    (list (list 'parent parent)
 	  (list 'children children))))
 
 (defun anx-really-process-meta ()
@@ -215,10 +215,14 @@ that need to be defined in their own tables."
   "Given a Lisp DOCUMENT, return the title of the parent table."
   (car (anx-assoc-val 'text (anx-assoc-val 'title (car (anx-assoc-val 'parent document))))))
 
-(defun anx-print-parent (x)
-  (anx-print-parent-or-child x))
+(defun anx-print-parent (parent-alist)
+  ;; Alist -> IO
+  "Given PARENT-ALIST, print its documentation table."
+  (anx-print-parent-or-child parent-alist))
 
 (defun anx-print-children (children)
+  ;; List -> IO
+  "Given a list CHILDREN, print each of their documentation tables."
   (mapc (lambda (x) (anx-print-parent x))
 	children))
 
@@ -255,11 +259,11 @@ that need to be defined in their own tables."
 	  (anx-process-stack-items)
 	  (anx-print-parent parent)
 	  (anx-print-children children)))
-  (error "`anx-print-meta' expects an array of association lists.")))
+  (error "`anx-print-meta' expects an array of association lists")))
 
 (defun anx-really-print-meta ()
   ;; -> IO State!
-  "Generates API service documentation from the contents of the current buffer.
+  "Generate API service documentation from the contents of the current buffer.
 Prints its output to the *scratch* buffer."
   (interactive)
   (let ((array-of-alists (read (buffer-string))))
@@ -277,28 +281,28 @@ Prints its output to the *scratch* buffer."
   "The format string used for Metrics table columns in documentation for reporting API services.")
 
 (defvar *anx-havings-hash* (make-hash-table :test 'equal)
-  "Records the existence of 'column fields (using t) from the 'havings' array returned by Report Service /meta calls")
+  "Record the existence of 'column fields (using t) from the 'havings' array returned by Report Service /meta calls.")
 
 (defvar *anx-filters-hash* (make-hash-table :test 'equal)
-  "Associates 'column and 'type fields from the 'filters' array returned by Report Service /meta calls")
+  "Associate 'column and 'type fields from the 'filters' array returned by Report Service /meta calls.")
 
 (defvar *anx-columns-hash* (make-hash-table :test 'equal)
-  "Associates 'column and 'type fields from the 'columns' array returned by Report Service /meta calls")
+  "Associate 'column and 'type fields from the 'columns' array returned by Report Service /meta calls.")
 
 (defun anx-build-columns-hash (report-meta-alist)
   ;; Array -> State!
   "Given REPORT-META-ALIST, builds *anx-columns-hash* from it."
   (mapc (lambda (alist)
-	  (puthash (anx-assoc-val 'column alist) 
-		   (anx-assoc-val 'type alist) 
+	  (puthash (anx-assoc-val 'column alist)
+		   (anx-assoc-val 'type alist)
 		   *anx-columns-hash*))
 	(anx-assoc-val 'columns report-meta-alist)))
 
 (defun anx-build-filters-hash (report-meta-alist)
   ;; Array -> State!
   "Given REPORT-META-ALIST, builds *anx-filters-hash* from it."
-  (mapc (lambda (alist) 
-	  (puthash (anx-assoc-val 'column alist) 
+  (mapc (lambda (alist)
+	  (puthash (anx-assoc-val 'column alist)
 		   (anx-assoc-val 'type alist)
 		   *anx-filters-hash*))
 	(anx-assoc-val 'filters report-meta-alist)))
@@ -306,7 +310,7 @@ Prints its output to the *scratch* buffer."
 (defun anx-build-havings-hash (report-meta-alist)
   ;; Array -> State!
   "Given REPORT-META-ALIST, builds *anx-havings-hash* from it."
-  (mapc (lambda (alist) 
+  (mapc (lambda (alist)
 	  (puthash (anx-assoc-val 'column alist) t *anx-havings-hash*))
 	(anx-assoc-val 'havings report-meta-alist)))
 
@@ -315,7 +319,7 @@ Prints its output to the *scratch* buffer."
   "Builds a list from elements of 'columns' that are not also in 'havings'.
 In other words, return only the dimensions and not the metrics."
   (let ((results nil))
-    (maphash (lambda (k v) 
+    (maphash (lambda (k v)
 	       (unless (gethash k *anx-havings-hash*)
 		 (push k results)))
 	     *anx-columns-hash*)
@@ -325,14 +329,14 @@ In other words, return only the dimensions and not the metrics."
   ;; -> List
   "Builds a list from elements of 'havings', which are metrics."
   (let ((results nil))
-    (maphash (lambda (k v) 
+    (maphash (lambda (k v)
 		 (push k results))
 	     *anx-havings-hash*)
     (reverse results)))
 
 (defun anx-print-report-meta (report-meta-alist)
   ;; Array -> IO State!
-  "Generates report documentation from REPORT-META-ALIST.
+  "Generate report documentation from REPORT-META-ALIST.
 Along the way, sets up and tears down hash tables to hold the
 necessary state."
   (progn
@@ -345,7 +349,7 @@ necessary state."
 
 (defun anx-really-print-report-meta ()
   ;; -> IO State!
-  "Generates Reporting API documentation from the contents of the current buffer.
+  "Generate Reporting API documentation from the contents of the current buffer.
 Prints its output to the *scratch* buffer."
   (interactive)
   (let ((report-meta (read (buffer-string))))
@@ -354,10 +358,10 @@ Prints its output to the *scratch* buffer."
 (defun anx-print-dimensions-table ()
   ;; -> IO State!
   "Prints a table of the report's dimensions in the *scratch* buffer."
-  (progn 
+  (progn
     (anx-print-to-scratch-buffer *anx-report-dimensions-table-header*)
     (mapcar (lambda (elem)
-	      (anx-print-to-scratch-buffer (format "| %s | %s | %s | |\n" elem 
+	      (anx-print-to-scratch-buffer (format "| %s | %s | %s | |\n" elem
 						  (gethash elem *anx-columns-hash*)
 						  (if (gethash elem *anx-filters-hash*)
 						      "Yes"
@@ -463,7 +467,7 @@ Prints its output to the *scratch* buffer."
 
 (defun anx-really-print-sdk-error-tables ()
   ;; -> IO State!
-  "Generates Mobile SDK error documentation from the contents of the current buffer."
+  "Generate Mobile SDK error documentation from the contents of the current buffer."
   (interactive)
   (let ((sdk-error-array (read (buffer-string))))
     (anx-print-sdk-error-tables sdk-error-array)))
@@ -537,7 +541,7 @@ tables ready to be filled out with documentation."
 
 (defun anx-delta-fields ()
   ;; -> Alist
-  "Checks the new fields table against the old, returning the delta.
+  "Check the new fields table against the old, returning the delta.
 Returns an alist with elements of the form (FIELD . OCCURRENCES).
 Note that we currently only return a delta if the new table
 contains fields the old one does not (not the other way around)."
