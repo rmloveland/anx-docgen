@@ -183,7 +183,7 @@ that need to be defined in their own tables."
   "The format string used for wiki table columns in documentation for standard API services.")
 
 (defvar *anx-standard-table-row*
-  "| %s | %s | %s | %s | | | |\n"
+  "| %s | %s | %s | %s | %s | %s | %s |\n"
   "The format string used for wiki table rows in documentation for standard API services.")
 
 (defun anx-print-to-scratch-buffer (format-string)
@@ -215,15 +215,47 @@ that need to be defined in their own tables."
   "Given a Lisp DOCUMENT, return the title of the parent table."
   (car (anx-assoc-val 'text (anx-assoc-val 'title (car (anx-assoc-val 'parent document))))))
 
+(defun anx-print-parent (x)
+  (anx-print-parent-or-child x))
+
+(defun anx-print-children (children)
+  (mapc (lambda (x) (anx-print-parent x))
+	children))
+
+(defun anx-print-parent-or-child (parent-or-child-alist)
+  ;; Alist -> IO
+  "Given a PARENT-OR-CHILD-ALIST, print an API documentation table from it."
+  (let ((title (second (car (anx-assoc-val 'title parent-or-child-alist))))
+	(columns *anx-standard-table-header*)
+	(rows (anx-assoc-val 'rows parent-or-child-alist)))
+    (progn (anx-print-to-scratch-buffer (format "\nh2. %s\n\n" title))
+	   (anx-print-to-scratch-buffer
+	    (format "%s\n" (concat "|| " (mapconcat (lambda (x) x) *anx-standard-table-header* " || ") " ||")))
+	   (mapc (lambda (row)
+		   (anx-print-to-scratch-buffer (format *anx-standard-table-row*
+							(anx-assoc-val 'name row)
+							(anx-assoc-val 'type row)
+							(anx-assoc-val 'sort_by row)
+							(anx-assoc-val 'filter_by row)
+							(anx-assoc-val 'description row)
+							(anx-assoc-val 'default row)
+							(anx-assoc-val 'required_on row))))
+		 rows))))
+
 (defun anx-print-meta (array-of-alists)
   ;; Array -> IO State!
   "Given an ARRAY-OF-ALISTS, print documentation tables from it."
   (if (anx-array-of-alists-p array-of-alists)
-      (progn
-	(anx-clear-stack)
-	(anx-process-objects array-of-alists)
-	(anx-process-stack-items))
-    (error "`anx-print-meta' expects an array of association lists.")))
+      (let* ((ir (anx-process-meta array-of-alists))
+	     (parent (car (anx-assoc-val 'parent ir)))
+	     (children (car (anx-assoc-val 'children ir))))
+	(progn
+	  (anx-clear-stack)
+	  (anx-process-objects array-of-alists)
+	  (anx-process-stack-items)
+	  (anx-print-parent parent)
+	  (anx-print-children children)))
+  (error "`anx-print-meta' expects an array of association lists.")))
 
 (defun anx-really-print-meta ()
   ;; -> IO State!
