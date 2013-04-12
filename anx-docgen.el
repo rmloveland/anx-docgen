@@ -99,7 +99,7 @@ key-value pair."
 
 (defun anx-alistify-object (json-object)
   ;; Alist -> Alist
-  "Given JSON-OBJECT (an alist), return an alist using our preferred intermediate representation."
+  "Given an alist JSON-OBJECT, return an alist in intermediate representation."
   (list
    (cons 'name (anx-assoc-val 'name json-object))
    (cons 'type (anx-assoc-val 'type json-object))
@@ -111,7 +111,7 @@ key-value pair."
 
 (defun anx-alistify-objects (array-of-alists)
   ;; Array -> Alist
-  "Given an ARRAY-OF-ALISTS, build an alist using our intermediate representation."
+  "Given an ARRAY-OF-ALISTS, return an alist in intermediate representation."
   (mapcar (lambda (json-object)
 	    (anx-alistify-object json-object))
 	  array-of-alists))
@@ -180,11 +180,11 @@ that need to be defined in their own tables."
 
 (defvar *anx-standard-table-header*
   '("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")
-  "The format string used for wiki table columns in documentation for standard API services.")
+  "Format string for standard API wiki table columns.")
 
 (defvar *anx-standard-table-row*
   "| %s | %s | %s | %s | %s | %s | %s |\n"
-  "The format string used for wiki table rows in documentation for standard API services.")
+  "Format string for standard API wiki table rows.")
 
 (defun anx-print-to-scratch-buffer (format-string)
   ;; -> IO
@@ -194,7 +194,7 @@ that need to be defined in their own tables."
 
 (defun anx-process-meta (array-of-alists)
   ;; Array -> Alist State!
-  "Given an ARRAY-OF-ALISTS, return an alist representing the documentation tables."
+  "Given ARRAY-OF-ALISTS, return an alist in intermediate representation."
   (let ((parent (anx-process-objects array-of-alists))
 	(children (anx-process-stack-items)))
     (anx-clear-stack)
@@ -203,7 +203,7 @@ that need to be defined in their own tables."
 
 (defun anx-really-process-meta ()
   ;; -> IO State!
-  "Convert the current buffer's contents to a generic Lisp representation."
+  "Convert the current buffer's contents to intermediate representation."
   (interactive)
   (let* ((array-of-alists (read (buffer-string)))
 	 (result (anx-process-meta array-of-alists))
@@ -234,16 +234,20 @@ that need to be defined in their own tables."
 	(rows (anx-assoc-val 'rows parent-or-child-alist)))
     (progn (anx-print-to-scratch-buffer (format "\nh2. %s\n\n" title))
 	   (anx-print-to-scratch-buffer
-	    (format "%s\n" (concat "|| " (mapconcat (lambda (x) x) *anx-standard-table-header* " || ") " ||")))
+	    (format "%s\n" 
+		    (concat "|| " (mapconcat 
+				   (lambda (x) x) 
+				   *anx-standard-table-header* " || ") " ||")))
 	   (mapc (lambda (row)
-		   (anx-print-to-scratch-buffer (format *anx-standard-table-row*
-							(anx-assoc-val 'name row)
-							(anx-assoc-val 'type row)
-							(anx-assoc-val 'sort_by row)
-							(anx-assoc-val 'filter_by row)
-							(anx-assoc-val 'description row)
-							(anx-assoc-val 'default row)
-							(anx-assoc-val 'required_on row))))
+		   (anx-print-to-scratch-buffer 
+		    (format *anx-standard-table-row*
+			    (anx-assoc-val 'name row)
+			    (anx-assoc-val 'type row)
+			    (anx-assoc-val 'sort_by row)
+			    (anx-assoc-val 'filter_by row)
+			    (anx-assoc-val 'description row)
+			    (anx-assoc-val 'default row)
+			    (anx-assoc-val 'required_on row))))
 		 rows))))
 
 (defun anx-print-meta (array-of-alists)
