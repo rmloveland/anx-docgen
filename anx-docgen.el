@@ -213,7 +213,9 @@ that need to be defined in their own tables."
 (defun anx-parent:title (document)
   ;; Alist -> String
   "Given a Lisp DOCUMENT, return the title of the parent table."
-  (car (anx-assoc-val 'text (anx-assoc-val 'title (car (anx-assoc-val 'parent document))))))
+  (car (anx-assoc-val 'text 
+		      (anx-assoc-val 'title 
+				     (car (anx-assoc-val 'parent document))))))
 
 (defun anx-print-parent (parent-alist)
   ;; Alist -> IO
@@ -234,12 +236,12 @@ that need to be defined in their own tables."
 	(rows (anx-assoc-val 'rows parent-or-child-alist)))
     (progn (anx-print-to-scratch-buffer (format "\nh2. %s\n\n" title))
 	   (anx-print-to-scratch-buffer
-	    (format "%s\n" 
-		    (concat "|| " (mapconcat 
-				   (lambda (x) x) 
+	    (format "%s\n"
+		    (concat "|| " (mapconcat
+				   (lambda (x) x)
 				   *anx-standard-table-header* " || ") " ||")))
 	   (mapc (lambda (row)
-		   (anx-print-to-scratch-buffer 
+		   (anx-print-to-scratch-buffer
 		    (format *anx-standard-table-row*
 			    (anx-assoc-val 'name row)
 			    (anx-assoc-val 'type row)
@@ -268,6 +270,7 @@ that need to be defined in their own tables."
 (defun anx-really-print-meta ()
   ;; -> IO State!
   "Generate API service documentation from the contents of the current buffer.
+
 Prints its output to the *scratch* buffer."
   (interactive)
   (let ((array-of-alists (read (buffer-string))))
@@ -278,20 +281,20 @@ Prints its output to the *scratch* buffer."
 
 (defvar *anx-report-dimensions-table-header*
   "\n|| Column || Type || Filter? || Description ||\n"
-  "The format string used for Dimensions table columns in documentation for reporting API services.")
+  "Format string for Dimensions columns in reporting API documentation.")
 
 (defvar *anx-report-metrics-table-header*
   "\n|| Column || Type || Formula || Description ||\n"
-  "The format string used for Metrics table columns in documentation for reporting API services.")
+  "Format string for Metrics columns in reporting API documentation.")
 
 (defvar *anx-havings-hash* (make-hash-table :test 'equal)
-  "Record the existence of 'column fields (using t) from the 'havings' array returned by Report Service /meta calls.")
+  "Record the existence of 'column' fields from the 'havings' array.")
 
 (defvar *anx-filters-hash* (make-hash-table :test 'equal)
-  "Associate 'column and 'type fields from the 'filters' array returned by Report Service /meta calls.")
+  "Associate 'column' and 'type' fields from the 'filters' array.")
 
 (defvar *anx-columns-hash* (make-hash-table :test 'equal)
-  "Associate 'column and 'type fields from the 'columns' array returned by Report Service /meta calls.")
+  "Associate 'column' and 'type' fields from the 'columns' array.")
 
 (defun anx-build-columns-hash (report-meta-alist)
   ;; Array -> State!
@@ -353,7 +356,7 @@ necessary state."
 
 (defun anx-really-print-report-meta ()
   ;; -> IO State!
-  "Generate Reporting API documentation from the contents of the current buffer.
+  "Generate reporting API documentation from the current buffer.
 Prints its output to the *scratch* buffer."
   (interactive)
   (let ((report-meta (read (buffer-string))))
@@ -365,11 +368,12 @@ Prints its output to the *scratch* buffer."
   (progn
     (anx-print-to-scratch-buffer *anx-report-dimensions-table-header*)
     (mapcar (lambda (elem)
-	      (anx-print-to-scratch-buffer (format "| %s | %s | %s | |\n" elem
-						  (gethash elem *anx-columns-hash*)
-						  (if (gethash elem *anx-filters-hash*)
-						      "Yes"
-						    "No"))))
+	      (anx-print-to-scratch-buffer 
+	       (format "| %s | %s | %s | |\n" elem
+		       (gethash elem *anx-columns-hash*)
+		       (if (gethash elem *anx-filters-hash*)
+			   "Yes"
+			 "No"))))
 	    (anx-build-dimensions-list))))
 
 (defun anx-print-metrics-table ()
@@ -378,12 +382,14 @@ Prints its output to the *scratch* buffer."
   (progn
     (anx-print-to-scratch-buffer *anx-report-metrics-table-header*)
     (mapcar (lambda (elem)
-	      (anx-print-to-scratch-buffer (format "| %s | %s | | |\n" elem (gethash elem *anx-columns-hash*))))
+	      (anx-print-to-scratch-buffer 
+	       (format "| %s | %s | | |\n" elem 
+		       (gethash elem *anx-columns-hash*))))
 	    (anx-build-metrics-list))))
 
 (defun anx-clear-report-hashes ()
   ;; -> State!
-  "Clear the state hash tables used to generate documentation for Reporting APIs."
+  "Clear state hash tables used to generate documentation for reporting APIs."
   (progn (clrhash *anx-havings-hash*)
 	 (clrhash *anx-columns-hash*)
 	 (clrhash *anx-filters-hash*)))
@@ -393,17 +399,17 @@ Prints its output to the *scratch* buffer."
 
 (defvar *anx-mobile-sdk-error-table-header*
   "\n|| Message || Key ||\n"
-  "The format string used for table columns in Mobile SDK error documentation.")
+  "Format string for table columns in mobile SDK error documentation.")
 
 (defvar *anx-android-sdk-errors* (make-hash-table :test 'equal)
-  "Stores the keys and associated messages that display in Android logs.")
+  "Store the keys and messages that display in Android logs.")
 
 (defvar *anx-ios-sdk-errors* (make-hash-table :test 'equal)
-  "Stores the keys and associated messages that display in iOS logs.")
+  "Store the keys and messages that display in iOS logs.")
 
 (defun anx-clear-sdk-error-hashes ()
   ;; -> State!
-  "Cleans up the hash tables used to maintain state when generating Mobile SDK error tables."
+  "Clean up hash tables used when generating mobile SDK error tables."
   (progn (clrhash *anx-android-sdk-errors*)
 	 (clrhash *anx-ios-sdk-errors*)))
 
@@ -424,7 +430,7 @@ Prints its output to the *scratch* buffer."
 
 (defun anx-sdk-error:android-p (error-object)
   ;; Alist -> Boolean
-  "Given ERROR-OBJECT, determine whether it can occur in the Android SDK."
+  "Given ERROR-OBJECT, determine whether it occurs in the Android SDK."
   (let* ((devices (anx-sdk-error:on error-object))
 	 (len (length devices)))
     (if (>= len 1)
@@ -433,7 +439,7 @@ Prints its output to the *scratch* buffer."
 
 (defun anx-sdk-error:ios-p (error-object)
   ;; Alist -> Boolean
-  "Given ERROR-OBJECT, determine whether it can occur in the iOS SDK."
+  "Given ERROR-OBJECT, determine whether it occurs in the iOS SDK."
   (let* ((devices (anx-sdk-error:on error-object))
 	 (len (length devices)))
     (if (> len 1)
@@ -471,7 +477,7 @@ Prints its output to the *scratch* buffer."
 
 (defun anx-really-print-sdk-error-tables ()
   ;; -> IO State!
-  "Generate Mobile SDK error documentation from the contents of the current buffer."
+  "Generate mobile SDK error documentation from the current buffer."
   (interactive)
   (let ((sdk-error-array (read (buffer-string))))
     (anx-print-sdk-error-tables sdk-error-array)))
@@ -479,10 +485,10 @@ Prints its output to the *scratch* buffer."
 ;;; Part 4. Working with existing documentation
 
 (defvar *anx-new-fields* (make-hash-table :test 'equal)
-  "A hash table for storing the fields from a freshly generated API service document.")
+  "Hash table for storing the fields from a newly generated API document.")
 
 (defvar *anx-old-fields* (make-hash-table :test 'equal)
-  "A hash table for storing the fields from an existing API service's documentation.")
+  "Hash table for storing the fields from an existing API document.")
 
 (defun anx-hash-incf (key table)
   ;; String Hash -> State!
@@ -496,17 +502,17 @@ a value of 1."
 
 (defun anx-old-fields-incf (field)
   ;; String -> State!
-  "A convenience function to increment the value of FIELD in `*anx-old-fields*'."
+  "Convenience function to increment FIELD in `*anx-old-fields*'."
   (anx-hash-incf field *anx-old-fields*))
 
 (defun anx-new-fields-incf (field)
   ;; String ->State!
-  "A convenience function to increment the value of FIELD in `*anx-new-fields*'."
+  "Convenience function to increment FIELD in `*anx-new-fields*'."
   (anx-hash-incf field *anx-new-fields*))
 
 (defun anx-clear-fields ()
   ;; -> State!
-  "A convenience function for clearing the state of our fields storage."
+  "Convenience function for clearing the hashes that store JSON fields."
   (progn
     (clrhash *anx-old-fields*)
     (clrhash *anx-new-fields*)))
