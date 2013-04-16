@@ -578,13 +578,12 @@ freshly generated tables."
     (save-excursion
       ;; First, clear old hash contents
       (anx-clear-fields)
-      (anx-build-new-fields (get-buffer buf1))
-      (anx-build-old-fields (get-buffer buf2))
+      (anx-build-old-fields (get-buffer buf1))
+      (anx-build-new-fields (get-buffer buf2))
       (with-current-buffer deltabuf
 	(princ (anx-delta-fields) (current-buffer))
 	(emacs-lisp-mode)
-	(elisp-format-buffer))
-      (switch-to-buffer-other-window deltabuf))))
+	(switch-to-buffer-other-window deltabuf)))))
 
 (provide 'anx-docgen)
 
