@@ -517,9 +517,12 @@ a value of 1."
     (clrhash *anx-old-fields*)
     (clrhash *anx-new-fields*)))
 
-(defun anx-extract-fields (buffer)
+(defun anx-extract-fields (buffer &optional slurp-whole-line)
   ;; Buffer -> List
-  "Make a list from all of the field names listed in BUFFER."
+  "Make a list from all of the field names listed in BUFFER.
+
+If optional SLURP-WHOLE-LINE is t, grab the field and all of its info.
+FIXME: Optional behavior not yet implemented."
   (let ((result nil))
     (save-excursion
       (with-current-buffer buffer
