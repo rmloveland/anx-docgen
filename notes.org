@@ -137,14 +137,21 @@
    
 * Things To Do
 
+** TODO Figure out how to slurp field definition info
+
+   This won't be that easy in cases where the info spans multiple lines.
+
 ** TODO Modify anx-docgen.el to output a Lispy representation
 
-** TODO Get everything under the 80-char limit!
+   - [ ] Report APIs
+   - [X] Regular APIs
 
 ** TODO Look into esxml
 
    Rather than reinvent the wheel with your own format, research
    whether output from esxml will suffice.
+
+** DONE Get everything under the 80-char limit!
 
 ** DONE Rewrite Lisp representation for standard reports as an alist
 
