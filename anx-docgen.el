@@ -577,7 +577,7 @@ freshly generated tables."
   (let ((deltabuf (generate-new-buffer "*ANX-Docgen Delta*")))
     (save-excursion
       ;; First, clear old hash contents
-      (anx-clear-field-name-hashes)
+      (anx-clear-fields)
       (anx-build-new-fields (get-buffer buf1))
       (anx-build-old-fields (get-buffer buf2))
       (with-current-buffer deltabuf
