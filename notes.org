@@ -89,38 +89,31 @@
    #+begin_src emacs-lisp
      '((dimensions
        (title
-       	(text "Dimensions"))
+        (text "Dimensions"))
        (header
-       	("Column" "Type" "Group?" "Filter?" "Description"))
-       (items
-       	(advertiser
-	 (column "advertiser") 
-	 (type "string")
-	 (group_by "Yes")
-	 (filter_by "Yes")
-	 (description "The name and ID of the advertiser"))
-       	(publisher
-	 (column "publisher") 
-	 (type "string")
-	 (group_by "Yes")
-	 (filter_by "Yes")
-	 (description "The name and ID of the publisher"))))
+        ("Column" "Type" "Group?" "Filter?" "Description"))
+       (items ((column "advertiser") 
+               (type "string")
+               (filter_by "Yes")
+               (description "The name and ID of the advertiser"))
+              ((column "publisher") 
+               (type "string")
+               (group_by "Yes")
+               (filter_by "Yes")
+               (description "The name and ID of the publisher"))))
        (metrics
-       	(title
-	 (text "Metrics"))
-       	(header
-	 ("Column" "Type" "Formula" "Description"))
-       	(items
-	 (imps
-	  (column "imps")
-	  (type "int")
-	  (formula "imps")
-	  (description "The number of impressions"))
-	 (clicks
-	  (column "clicks")
-	  (type "int")
-	  (formula "clicks")
-	  (description "The number of clicks")))))
+        (title
+         (text "Metrics"))
+        (header
+         ("Column" "Type" "Formula" "Description"))
+        (items ((column "imps")
+                (type "int")
+                (formula "imps")
+                (description "The number of impressions"))
+               ((column "clicks")
+                (type "int")
+                (formula "clicks")
+                (description "The number of clicks")))))
      
    #+end_src
 
