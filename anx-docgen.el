@@ -180,7 +180,7 @@ that need to be defined in their own tables."
 
 (defvar *anx-standard-table-header*
   '("Name" "Type" "Sort by?" "Filter by?" "Description" "Default" "Required on")
-  "Format string for standard API wiki table columns.")
+  "Titles for standard API wiki table columns.")
 
 (defvar *anx-standard-table-row*
   "| %s | %s | %s | %s | %s | %s | %s |\n"
@@ -280,12 +280,20 @@ Prints its output to the *scratch* buffer."
 ;; Part 2. Reporting
 
 (defvar *anx-report-dimensions-table-header*
-  "\n|| Column || Type || Filter? || Description ||\n"
-  "Format string for Dimensions columns in reporting API documentation.")
+  '("Column" "Type" "Filter?" "Description")
+  "Titles for reporting API dimensions columns.")
+
+(defvar *anx-report-dimensions-table-row*
+  "| %s | %s | %s | %s |\n"
+  "Format string for reporting API dimensions rows.")
 
 (defvar *anx-report-metrics-table-header*
-  "\n|| Column || Type || Formula || Description ||\n"
-  "Format string for Metrics columns in reporting API documentation.")
+  '("Column" "Type" "Formula" "Description")
+  "Titles for reporting API Metrics columns.")
+
+(defvar *anx-report-metrics-table-row*
+  "| %s | %s | %s | %s |\n"
+  "Format string for reporting API metrics rows.")
 
 (defvar *anx-havings-hash* (make-hash-table :test 'equal)
   "Record the existence of 'column' fields from the 'havings' array.")
@@ -334,38 +342,106 @@ In other words, return only the dimensions and not the metrics."
 
 (defun anx-build-metrics-list ()
   ;; -> List
-  "Builds a list from elements of 'havings', which are metrics."
+  "Builds a list from elements of 'havings', a.k.a. the metrics."
   (let ((results nil))
     (maphash (lambda (k v)
 		 (push k results))
 	     *anx-havings-hash*)
     (reverse results)))
 
+(defun anx-process-dimensions-and-metrics ()
+  ;; -> Alist
+  "Given lists DIMENSIONS and METRICS, return an alist."
+  (let ((dimensions (anx-process-dimensions))
+	(metrics (anx-process-metrics)))
+    (list dimensions metrics)))
+
+(defun anx-process-dimensions ()
+  ;; -> List
+  "Return a Lisp list representation of the report dimensions."
+  (list 'dimensions
+	(list 'title
+	      (list 'text "Dimensions"))
+	(list 'header *anx-report-dimensions-table-header*)
+	(list 'items 
+	      (mapcar (lambda (elem)
+			(list (cons 'name elem)
+			      (cons 'type (anx-get-column-type elem))
+			      (cons 'filter_by (anx-translate-boolean (anx-report-filter-p elem)))
+			      (cons 'description "")))
+		      (anx-build-dimensions-list)))))
+
+(defun anx-process-metrics ()
+  ;; -> List
+  "Return a Lisp list representation of the report metrics."
+  (list 'metrics
+	(list 'title
+	      (list 'text "Metrics"))
+	(list 'header *anx-report-metrics-table-header*) ; column type formula description
+	(list 'items 
+	      (mapcar (lambda (elem)
+			(list (cons 'name elem)
+			      (cons 'type (anx-get-column-type elem))
+			      (cons 'formula "")
+			      (cons 'description "")))
+		      (anx-build-metrics-list)))))
+
+(defun anx-report-filter-p (item)
+  ;; String -> Boolean
+  "Given report column ITEM, determine if it can be a reporting filter.
+Use `anx-translate-boolean' to create a representation suitable for printing."
+  (if (gethash item *anx-filters-hash*)
+      t
+    nil))
+
+(defun anx-get-column-type (item)
+  ;; String -> String
+  "Given report column ITEM, return its type."
+  (gethash item *anx-columns-hash*))
 
 (defun anx-print-dimensions-table ()
-  ;; -> IO State!
-  "Prints a table of the report's dimensions in the *scratch* buffer."
-  (progn
-    (anx-print-to-scratch-buffer *anx-report-dimensions-table-header*)
-    (mapcar (lambda (elem)
-	      (anx-print-to-scratch-buffer 
-	       (format "| %s | %s | %s | |\n" elem
-		       (gethash elem *anx-columns-hash*)
-		       (if (gethash elem *anx-filters-hash*)
-			   "Yes"
-			 "No"))))
-	    (anx-build-dimensions-list))))
+  ;; -> IO
+  "Print a table of the report's dimensions in the *scratch* buffer."
+  (let* ((dimensions (anx-process-dimensions))
+	 (items (car (anx-assoc-val 'items dimensions)))
+	 (title (cadar (anx-assoc-val 'title dimensions)))
+	 (header (car (anx-assoc-val 'header (anx-process-dimensions))))
+	 (header-string
+	  (concat "|| " (mapconcat
+			 (lambda (x) x)
+			 header " || ") " ||")))
+    (anx-print-to-scratch-buffer (format "\nh2. %s\n\n" title))
+    (anx-print-to-scratch-buffer (format "%s\n" header-string))
+    (mapc (lambda (elem)
+	    (anx-print-to-scratch-buffer
+	     (format *anx-report-dimensions-table-row*
+		     (anx-assoc-val 'name elem)
+		     (anx-assoc-val 'type elem)
+		     (anx-translate-boolean (anx-assoc-val 'filter_by elem))
+		     (anx-assoc-val 'description elem)))) 
+	  items)))
 
 (defun anx-print-metrics-table ()
   ;; Array -> IO State!
-  "Prints a table of the report's metrics in the *scratch* buffer."
-  (progn
-    (anx-print-to-scratch-buffer *anx-report-metrics-table-header*)
-    (mapcar (lambda (elem)
-	      (anx-print-to-scratch-buffer 
-	       (format "| %s | %s | | |\n" elem 
-		       (gethash elem *anx-columns-hash*))))
-	    (anx-build-metrics-list))))
+  "Print a table of the report's metrics in the *scratch* buffer."
+  (let* ((metrics (anx-process-metrics))
+	 (items (car (anx-assoc-val 'items metrics)))
+	 (title (cadar (anx-assoc-val 'title metrics)))
+	 (header (car (anx-assoc-val 'header (anx-process-metrics))))
+	 (header-string
+	  (concat "|| " (mapconcat
+			 (lambda (x) x)
+			 header " || ") " ||")))
+    (anx-print-to-scratch-buffer (format "\nh2. %s\n\n" title))
+    (anx-print-to-scratch-buffer (format "%s\n" header-string))
+    (mapc (lambda (elem)
+	    (anx-print-to-scratch-buffer
+	     (format *anx-report-metrics-table-row*
+		     (anx-assoc-val 'name elem)
+		     (anx-assoc-val 'type elem)
+		     (anx-translate-boolean (anx-assoc-val 'formula elem))
+		     (anx-assoc-val 'description elem)))) 
+	  items)))
 
 (defun anx-print-report-meta (report-meta-alist)
   ;; Array -> IO State!
