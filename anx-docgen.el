@@ -341,26 +341,6 @@ In other words, return only the dimensions and not the metrics."
 	     *anx-havings-hash*)
     (reverse results)))
 
-(defun anx-print-report-meta (report-meta-alist)
-  ;; Array -> IO State!
-  "Generate report documentation from REPORT-META-ALIST.
-Along the way, sets up and tears down hash tables to hold the
-necessary state."
-  (progn
-    (anx-build-columns-hash report-meta-alist)
-    (anx-build-filters-hash report-meta-alist)
-    (anx-build-havings-hash report-meta-alist)
-    (anx-print-dimensions-table)
-    (anx-print-metrics-table)
-    (anx-clear-report-hashes)))
-
-(defun anx-really-print-report-meta ()
-  ;; -> IO State!
-  "Generate reporting API documentation from the current buffer.
-Prints its output to the *scratch* buffer."
-  (interactive)
-  (let ((report-meta (read (buffer-string))))
-    (anx-print-report-meta report-meta)))
 
 (defun anx-print-dimensions-table ()
   ;; -> IO State!
@@ -386,6 +366,27 @@ Prints its output to the *scratch* buffer."
 	       (format "| %s | %s | | |\n" elem 
 		       (gethash elem *anx-columns-hash*))))
 	    (anx-build-metrics-list))))
+
+(defun anx-print-report-meta (report-meta-alist)
+  ;; Array -> IO State!
+  "Generate report documentation from REPORT-META-ALIST.
+Along the way, sets up and tears down hash tables to hold the
+necessary state."
+  (progn
+    (anx-build-columns-hash report-meta-alist)
+    (anx-build-filters-hash report-meta-alist)
+    (anx-build-havings-hash report-meta-alist)
+    (anx-print-dimensions-table)
+    (anx-print-metrics-table)
+    (anx-clear-report-hashes)))
+
+(defun anx-really-print-report-meta ()
+  ;; -> IO State!
+  "Generate reporting API documentation from the current buffer.
+Prints its output to the *scratch* buffer."
+  (interactive)
+  (let ((report-meta (read (buffer-string))))
+    (anx-print-report-meta report-meta)))
 
 (defun anx-clear-report-hashes ()
   ;; -> State!
