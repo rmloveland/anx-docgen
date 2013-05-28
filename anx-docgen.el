@@ -427,7 +427,7 @@ Use `anx-translate-boolean' to create a representation suitable for printing."
   (let* ((metrics (anx-process-metrics))
 	 (items (car (anx-assoc-val 'items metrics)))
 	 (title (cadar (anx-assoc-val 'title metrics)))
-	 (header (car (anx-assoc-val 'header (anx-process-metrics))))
+	 (header (car (anx-assoc-val 'header metrics)))
 	 (header-string
 	  (concat "|| " (mapconcat
 			 (lambda (x) x)
@@ -439,8 +439,8 @@ Use `anx-translate-boolean' to create a representation suitable for printing."
 	     (format *anx-report-metrics-table-row*
 		     (anx-assoc-val 'name elem)
 		     (anx-assoc-val 'type elem)
-		     (anx-translate-boolean (anx-assoc-val 'formula elem))
-		     (anx-assoc-val 'description elem)))) 
+		     ""
+		     (anx-assoc-val 'description elem))))
 	  items)))
 
 (defun anx-print-report-meta (report-meta-alist)
