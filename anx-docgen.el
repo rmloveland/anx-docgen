@@ -18,7 +18,7 @@
 
 ;;; Code:
 
-(require 'appnexus)
+(require 'anx-api)
 
 ;; Part 1. Standard API Services
 
@@ -213,8 +213,8 @@ that need to be defined in their own tables."
 (defun anx-parent:title (document)
   ;; Alist -> String
   "Given a Lisp DOCUMENT, return the title of the parent table."
-  (car (anx-assoc-val 'text 
-		      (anx-assoc-val 'title 
+  (car (anx-assoc-val 'text
+		      (anx-assoc-val 'title
 				     (car (anx-assoc-val 'parent document))))))
 
 (defun anx-print-parent (parent-alist)
@@ -363,7 +363,7 @@ In other words, return only the dimensions and not the metrics."
 	(list 'title
 	      (list 'text "Dimensions"))
 	(list 'header *anx-report-dimensions-table-header*)
-	(list 'items 
+	(list 'items
 	      (mapcar (lambda (elem)
 			(list (cons 'name elem)
 			      (cons 'type (anx-get-column-type elem))
@@ -378,7 +378,7 @@ In other words, return only the dimensions and not the metrics."
 	(list 'title
 	      (list 'text "Metrics"))
 	(list 'header *anx-report-metrics-table-header*) ; column type formula description
-	(list 'items 
+	(list 'items
 	      (mapcar (lambda (elem)
 			(list (cons 'name elem)
 			      (cons 'type (anx-get-column-type elem))
@@ -418,7 +418,7 @@ Use `anx-translate-boolean' to create a representation suitable for printing."
 		     (anx-assoc-val 'name elem)
 		     (anx-assoc-val 'type elem)
 		     (anx-translate-boolean (anx-assoc-val 'filter_by elem))
-		     (anx-assoc-val 'description elem)))) 
+		     (anx-assoc-val 'description elem))))
 	  items)))
 
 (defun anx-print-metrics-table ()
@@ -664,6 +664,36 @@ freshly generated tables."
 	(princ (anx-delta-fields) (current-buffer))
 	(emacs-lisp-mode)
 	(switch-to-buffer-other-window deltabuf)))))
+
+;; Extracting fields from API responses. This should live somewhere
+;; else. Right now I just need to pull it out of `anx-api'.
+
+(defun anx-extract-meta-fields ()
+  "Extract the 'fields' variable from the API response."
+  (interactive)
+  (let* ((it (read (buffer-string)))
+	 (response (let ((json-object-type 'alist))
+		     (assoc 'response it)))
+	 (fields (cdr (assoc 'fields response)))
+	 (bufname (concat (buffer-name) " (META FIELDS ONLY)"))
+	(mode 'emacs-lisp-mode))
+    (anx--pop-up-buffer bufname fields mode)))
+
+(defun anx-extract-report-meta-fields ()
+  "Extract the 'fields' variable from the reporting API response."
+  (interactive)
+  (let* ((it (read (buffer-string)))
+	 (response (let ((json-object-type 'alist))
+		     (assoc 'response it)))
+	 (fields (cdr (assoc 'meta response)))
+	 (bufname (concat (buffer-name) " (REPORT META FIELDS ONLY)"))
+	(mode 'emacs-lisp-mode))
+    (anx--pop-up-buffer bufname fields mode)))
+
+;; Keybindings
+
+(global-set-key (kbd "C-x C-a M") 'anx-extract-meta-fields)
+(global-set-key (kbd "C-x C-a R") 'anx-extract-report-meta-fields)
 
 (provide 'anx-docgen)
 
