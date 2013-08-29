@@ -87,16 +87,6 @@ key-value pair."
       "No"
     "Yes"))
 
-(defun anx-format-object-standard-fields (json-object)
-  ;; Alist -> IO
-  "Format the fields of JSON-OBJECT for printing using `*anx-standard-table-row*'."
-  (let* ((fields (anx-list-object-standard-fields json-object)))
-    (format *anx-standard-table-row*
-	    (pop fields)
-	    (pop fields)
-	    (pop fields)
-	    (pop fields))))
-
 (defun anx-alistify-object (json-object)
   ;; Alist -> Alist
   "Given an alist JSON-OBJECT, return an alist in intermediate representation."
