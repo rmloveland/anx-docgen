@@ -29,7 +29,7 @@
   ;; Object -> Boolean
   "Determine if this OBJECT is an association list."
   (and (listp object)
-       (every #'consp object)))
+       (cl-every #'consp object)))
 
 (defun anx-get-alist-keys (object)
   ;; Object -> List
@@ -45,7 +45,7 @@ Otherwise return nil."
   ;; Object -> Boolean
   "Determine if OBJECT is an array of association lists."
   (and (arrayp object)
-       (equalp nil (remove-if (lambda (x) (equalp x t))
+       (equal nil (cl-remove-if (lambda (x) (equal x t))
 			      (mapcar (lambda (x) (anx-alistp x))
 				      object)))))
 
@@ -684,6 +684,20 @@ freshly generated tables."
 
 (global-set-key (kbd "C-x C-a M") 'anx-extract-meta-fields)
 (global-set-key (kbd "C-x C-a R") 'anx-extract-report-meta-fields)
+
+;; Let's work on automatically generating Console documentation!
+
+(defun anx--titlecase (field-name)
+  ;; String -> String
+  "Reformat FIELD-NAME (as used by our API) for Console documentation."
+  ;; We need to wrap the body in SAVE-MATCH-DATA because SPLIT-STRING
+  ;; frobs global regexp match state.
+  (save-match-data
+    (mapconcat 
+     (lambda (x) x)
+     (mapcar
+      (lambda (word) (capitalize word))
+      (split-string field-name "_")) " ")))
 
 (provide 'anx-docgen)
 
