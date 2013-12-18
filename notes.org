@@ -8,66 +8,96 @@
   automatically create formatted documentation tables from the JSON
   returned by various AppNexus API services' `/meta' calls.
 
-* API Services
+  As of today (Wed Dec 18 11:48:15 2013), it has a few limitations:
+
+  - Generates fresh, blank tables only.  The writer still has to go in
+    and add descriptions of the various fields by hand, which sucks.
+    Here's an example of the current format for reference:
+
+    #+BEGIN_QUOTE
+    h2. Dimensions
+    
+    || Column || Type || Filter? || Description ||
+    | month | date | Yes |  |
+    | day | date | Yes |  |
+    | hour | date | Yes |  |
+    ...
+
+    h2. Metrics
+    
+    || Column || Type || Formula || Description ||
+    | imps | int |  |  |
+    | clicks | int |  |  |
+    | cost | money |  |  |
+    ...
+    #+END_QUOTE
+
+  - The current output format is API-only.  (Although it's pretty
+    close to what the Console documentation needs, and we can get most
+    of the way there with some simple formatting changes.)
+
+  - 
+
+* Standard API Services
   
 ** Data Format
 
    You are given an array of JSON objects, which is converted into an
-   array of Lisp association lists .
+   array of Lisp association lists.
 
-   For each association list (or /alist/), the following information is
-   available:
+   For each alist, the following information is available:
 
    | Field    | Type             | Sort by? | Filter by? |
    |----------+------------------+----------+------------|
    | snapshot | array of objects | false    | false      |
    |          |                  |          |            |
 
-   If the alist's /type/ value is ``array of objects'', the =fields=
+   If the alist's `type' value is ``array of objects'', the =fields=
    key will also be available, which is itself an array of objects.
 
 ** Implementation
 
    As a first cut, we will implement a ``two-pass'' solution. We
-   iterate over the array of objects, printing the /name/, /type/,
-   /sort_by/ and /filter_by/ values into a tabular format.
+   iterate over the array of objects, printing the =name=, =type=,
+   =sort_by= and =filter_by= values into a tabular format.
    
-   If the /type/ is ``array of objects'', there should be a /fields/
+   If the =type= is ``array of objects'', there should be a =fields=
    key. If this key exists, we will cons the name of the current
-   object onto the array of objects in /fields/, and then push /fields/
-   onto a stack.
+   object onto the array of objects in =fields=, and then push
+   =fields= onto a stack.
 
    After the first pass, when we've printed out the initial table, we
    will then pop items off of the stack one by one, printing them out
-   in a tabular format as well.
+   in a tabular format.
 
-* Reports
+* Report Services
 
   There are several types of listings returned by the Report Service's
   `/meta' calls -- these examples are drawn from the Network Analytics
   report:
 
-  - /time_intervals/: 1 line
-  - /columns/: 124 lines
-  - /filters/: 45 lines
-  - /havings/: 20 lines
-  - /label_fields/: 1 line
-  - /time_granularity/: 1 line
+  - =time_intervals=: 1 line
+  - =columns=: 124 lines
+  - =filters=: 45 lines
+  - =havings=: 20 lines
+  - =label_fields=: 1 line
+  - =time_granularity=: 1 line
 
-  The report API documentation, by contrast, uses the following format:
+  The report API documentation, by contrast, uses the following
+  format:
 
   - Time Frame
 
-    This just lists the items in the `time_intervals' field.
+    This just lists the items in the =time_intervals= field.
 
   - Dimensions
 
     These are everything the API calls the `columns', minus what it
-    calls the `havings'. An array of alists.
+    calls the `havings'.  An array of alists.
 
   - Metrics
 
-    These are the items the API calls the `havings'. Also an array of
+    These are the items the API calls the `havings'.  Also an array of
     alists.
 
 ** Data Format
@@ -116,3 +146,30 @@
 *** Metrics
 
 | Column | Type | Description |
+* Next Steps: Generating Console Reporting Documentation
+
+* Work Items
+
+** TODO Figure out how to slurp field definition info from existing documentation
+
+   This won't be that easy in cases where the info spans multiple
+   lines. Now that we're upgrading Confluence, it could get easier,
+   since we'll only have access to a crap XML-ish format (which at
+   least has a parser).
+
+** TODO Modify anx-docgen.el to output a Lispy representation
+
+   - [ ] Report APIs
+   - [X] Regular APIs
+
+** TODO Look into using esxml
+
+   Rather than reinvent the wheel with your own format, research
+   whether input/output to/from esxml will suffice.
+
+** DONE Get everything under the 80-char limit!
+
+** DONE Rewrite Lisp representation for standard reports as an alist
+
+   See [[Report Services]].
+
