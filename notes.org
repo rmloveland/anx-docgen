@@ -1,0 +1,118 @@
+#+title: ANX-Docgen Design Notes
+#+author: Rich Loveland
+#+email: rloveland@appnexus.com
+
+* Overview
+
+  ANX-Docgen is an Emacs Lisp package that is designed to
+  automatically create formatted documentation tables from the JSON
+  returned by various AppNexus API services' `/meta' calls.
+
+* API Services
+  
+** Data Format
+
+   You are given an array of JSON objects, which is converted into an
+   array of Lisp association lists .
+
+   For each association list (or /alist/), the following information is
+   available:
+
+   | Field    | Type             | Sort by? | Filter by? |
+   |----------+------------------+----------+------------|
+   | snapshot | array of objects | false    | false      |
+   |          |                  |          |            |
+
+   If the alist's /type/ value is ``array of objects'', the =fields=
+   key will also be available, which is itself an array of objects.
+
+** Implementation
+
+   As a first cut, we will implement a ``two-pass'' solution. We
+   iterate over the array of objects, printing the /name/, /type/,
+   /sort_by/ and /filter_by/ values into a tabular format.
+   
+   If the /type/ is ``array of objects'', there should be a /fields/
+   key. If this key exists, we will cons the name of the current
+   object onto the array of objects in /fields/, and then push /fields/
+   onto a stack.
+
+   After the first pass, when we've printed out the initial table, we
+   will then pop items off of the stack one by one, printing them out
+   in a tabular format as well.
+
+* Reports
+
+  There are several types of listings returned by the Report Service's
+  `/meta' calls -- these examples are drawn from the Network Analytics
+  report:
+
+  - /time_intervals/: 1 line
+  - /columns/: 124 lines
+  - /filters/: 45 lines
+  - /havings/: 20 lines
+  - /label_fields/: 1 line
+  - /time_granularity/: 1 line
+
+  The report API documentation, by contrast, uses the following format:
+
+  - Time Frame
+
+    This just lists the items in the `time_intervals' field.
+
+  - Dimensions
+
+    These are everything the API calls the `columns', minus what it
+    calls the `havings'. An array of alists.
+
+  - Metrics
+
+    These are the items the API calls the `havings'. Also an array of
+    alists.
+
+** Data Format
+
+   You are given an association list with the following substructures:
+
+   1. time_intervals (array of strings)
+
+   2. havings (array of 1:alists)
+
+   3. filters (array of 2:alists)
+
+   4. retention_days (string)
+
+   5. columns (array of 2:alists)
+
+   6. time_granularity (string)
+
+   The following dependencies exist:
+
+   - `Havings' contains the ``Metrics'', which is a subset of the `columns'.
+
+   - `Filters' is the subset of `columns' which can be filtered by.
+
+   - `Columns' is a superset that includes `havings' and `filters'.
+     
+   Perhaps what we should do is create three hash tables,
+   `havings-hash', `filters-hash' `column-types-hash'. As part of our
+   pre-processing step, we'll add each item from `havings', `filters',
+   and `columns' to their respective hash tables. The first two will
+   add simple existence checks. For `columns', we want to store the
+   `type' for later retrieval.
+
+   Then, we iterate over `columns', checking each column against the
+   `filters-hash' and `havings-hash'. If it's in `filters-hash', we output
+   that in the documentation. If it's in `havings-hash', we add the
+   `type' as the value to that hash key for the ``Metrics'' table.
+
+   Thus we'll end up with headings for our documentation tables like
+   so:
+
+*** Dimensions
+
+| Column | Type | Filter By? | Description |
+
+*** Metrics
+
+| Column | Type | Description |
