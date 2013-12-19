@@ -196,7 +196,7 @@ that need to be defined in their own tables."
   "Convert the current buffer's contents to intermediate representation."
   (interactive)
   (let* ((array-of-alists (read (buffer-string)))
-	 (result (anx-process-meta array-of-alists))
+	 (result (anx--process-meta array-of-alists))
 	 (bufname (concat (buffer-name) " [INTERMEDIATE REPRESENTATION]")))
     (anx--pop-up-buffer bufname result 'emacs-lisp-mode)))
 
@@ -264,7 +264,7 @@ that need to be defined in their own tables."
 Prints its output to the *scratch* buffer."
   (interactive)
   (let ((array-of-alists (read (buffer-string))))
-    (anx-print-meta array-of-alists)))
+    (anx--print-meta array-of-alists)))
 
 
 ;; Part 2. Reporting
@@ -452,7 +452,7 @@ necessary state."
 Prints its output to the *scratch* buffer."
   (interactive)
   (let ((report-meta (read (buffer-string))))
-    (anx-print-report-meta report-meta)))
+    (anx--print-report-meta report-meta)))
 
 (defun anx--clear-report-hashes ()
   ;; -> State!
@@ -547,7 +547,7 @@ Prints its output to the *scratch* buffer."
   "Generate mobile SDK error documentation from the current buffer."
   (interactive)
   (let ((sdk-error-array (read (buffer-string))))
-    (anx-print-sdk-error-tables sdk-error-array)))
+    (anx--print-sdk-error-tables sdk-error-array)))
 
 ;;; Part 4. Working with existing documentation
 
@@ -647,11 +647,11 @@ freshly generated tables."
   (let ((deltabuf (generate-new-buffer "*ANX-Docgen Delta*")))
     (save-excursion
       ;; First, clear old hash contents
-      (anx-clear-fields)
-      (anx-build-old-fields (get-buffer buf1))
-      (anx-build-new-fields (get-buffer buf2))
+      (anx--clear-fields)
+      (anx--build-old-fields (get-buffer buf1))
+      (anx--build-new-fields (get-buffer buf2))
       (with-current-buffer deltabuf
-	(princ (anx-delta-fields) (current-buffer))
+	(princ (anx--delta-fields) (current-buffer))
 	(emacs-lisp-mode)
 	(switch-to-buffer-other-window deltabuf)))))
 
