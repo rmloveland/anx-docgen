@@ -257,7 +257,7 @@ that need to be defined in their own tables."
 	  (anx--print-children children)))
   (error "`anx--print-meta' expects an array of association lists")))
 
-(defun anx--really-print-meta ()
+(defun anx-really-print-meta ()
   ;; -> IO State!
   "Generate API service documentation from the contents of the current buffer.
 
