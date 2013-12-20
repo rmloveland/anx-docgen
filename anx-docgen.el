@@ -112,7 +112,7 @@ key-value pair."
 These are created when some JSON fields contain child fields
 that need to be defined in their own tables."
   (let* ((lc-name (car list))
-	 (uc-name (capitalize lc-name))
+	 (uc-name (mapconcat (lambda (x) x) (split-string (capitalize lc-name) "_") " "))
 	 (array-of-alists (cdr list)))
     (list
      (list 'title
