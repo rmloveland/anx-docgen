@@ -216,29 +216,3 @@
    DB.)  Is there a way to access this from Lisp?
 
    If this does happen, it will be much later.
-
-* Work Items
-
-** TODO Figure out how to slurp field definition info from existing documentation
-
-   This won't be that easy in cases where the info spans multiple
-   lines. Now that we're upgrading Confluence, it could get easier,
-   since we'll only have access to a crap XML-ish format (which at
-   least has a parser).
-
-** TODO Modify anx-docgen.el to output a Lispy representation
-
-   - [ ] Report APIs
-   - [X] Regular APIs
-
-** TODO Look into using esxml
-
-   Rather than reinvent the wheel with your own format, research
-   whether input/output to/from esxml will suffice.
-
-** DONE Get everything under the 80-char limit!
-
-** DONE Rewrite Lisp representation for standard reports as an alist
-
-   See [[Report Services]].
-
