@@ -1,11 +1,11 @@
-;;; anx-docgen.el --- A tool for generating structured API documentation.
+;;; anx-docgen.el --- A tool for generating AppNexus API documentation.
 ;;; -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013 Rich Loveland
+;; Copyright (C) 2013, 2014, 2015 Rich Loveland
 
 ;; Author: Rich Loveland
 ;; Version: 0.1
-;; Keywords: convenience, JSON, REST, API, Documentation
+;; Keywords: convenience, JSON, REST, API, Documentation, AppNexus
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -655,8 +655,9 @@ freshly generated tables."
 	(emacs-lisp-mode)
 	(switch-to-buffer-other-window deltabuf)))))
 
-;; Extracting fields from API responses. This should live somewhere
-;; else. Right now I just need to pull it out of `anx-api'.
+;; ++ Extracting fields from API responses. The following functions
+;; should live somewhere else. Right now I just need to pull them out
+;; of `anx-api'.
 
 (defun anx-extract-meta-fields ()
   "Extract the 'fields' variable from the API response."
@@ -668,6 +669,10 @@ freshly generated tables."
 	 (bufname (concat (buffer-name) " (META FIELDS ONLY)"))
 	(mode 'emacs-lisp-mode))
     (anx--pop-up-buffer bufname fields mode)))
+
+;; ++ Implement this for bidder docs.
+(defun anx-extract-bidder-meta-fields ()
+  (interactive))
 
 (defun anx-extract-report-meta-fields ()
   "Extract the 'fields' variable from the reporting API response."
